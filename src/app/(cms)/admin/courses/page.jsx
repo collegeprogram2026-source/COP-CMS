@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
 import DegreeTypeSelect from "../components/DegreeTypeSelect";
+import { Toast } from "@/app/(cms)/admin/components/toast";
+import { Button } from "@/components/ui/button";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -33,21 +35,13 @@ export default function CoursesPage() {
   /* ---------------------------------- */
   const fetchCourses = async () => {
     try {
-      const res = await callApi("/api/admin/courses", {
+      const res = await fetch("/api/admin/courses", {
         cache: "no-store",
-        auth: true,
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setCourses(Array.isArray(data) ? data : []);
-      } else {
-        console.error("Failed to fetch courses:", await res.text());
-        setCourses([]);
-      }
+      const data = await res.json();
+      setCourses(data);
     } catch (err) {
       console.error("Error fetching courses", err);
-      setCourses([]);
     }
   };
 
@@ -77,10 +71,10 @@ export default function CoursesPage() {
 
     setLoading(true);
 
-    await callApi("/api/admin/courses", {
+    await fetch("/api/admin/courses", {
       method: "POST",
-      auth: true,
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     });
 
     setFormData({
@@ -122,10 +116,10 @@ export default function CoursesPage() {
 
     setLoading(true);
 
-    await callApi(`/api/admin/courses/${id}`, {
+    await fetch(`/api/admin/courses/${id}`, {
       method: "PUT",
-      auth: true,
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     });
 
     setEditingId(null);
@@ -140,235 +134,267 @@ export default function CoursesPage() {
     const confirmDelete = confirm("Delete this course?");
     if (!confirmDelete) return;
 
-    await callApi(`/api/admin/courses/${id}`, {
+    await fetch(`/api/admin/courses/${id}`, {
       method: "DELETE",
-      auth: true,
     });
 
     fetchCourses();
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-3 text-gray-800">
-      <h1 className="text-2xl font-bold mb-6">Courses</h1>
+    <div className="max-w-7xl mx-auto p-8 text-foreground">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">Courses</h1>
+        <p className="text-muted-foreground">Manage your curriculum and course details</p>
+      </div>
 
       {/* ---------------------------------- */}
       {/* Create Form */}
       {/* ---------------------------------- */}
-      <form
-        onSubmit={handleCreate}
-        className="bg-white p-6 rounded-xl shadow mb-8 space-y-4"
-      >
-        <div className="flex gap-4">
+      <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 mb-10">
+        <h2 className="text-lg font-semibold mb-6">Create New Course</h2>
+        <form onSubmit={handleCreate} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Name */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Course Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Computer Science"
+                value={formData.name}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({
+                    ...formData,
+                    name: value,
+                    slug: generateSlug(value),
+                  });
+                }}
+                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+              />
+            </div>
 
-          {/* Name */}
-          <input
-            type="text"
-            placeholder="Course name"
-            value={formData.name}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData({
-                ...formData,
-                name: value,
-                slug: generateSlug(value),
-              });
-            }}
-            className="flex-1 border px-4 py-2 rounded-md"
-          />
+            {/* Slug */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Slug</label>
+              <input
+                type="text"
+                placeholder="auto-generated-slug"
+                value={formData.slug}
+                readOnly
+                className="w-full border border-border/40 px-4 py-2.5 rounded-lg bg-muted/50 text-muted-foreground cursor-not-allowed outline-none"
+              />
+            </div>
 
-          {/* Slug */}
-          <input
-            type="text"
-            placeholder="slug"
-            value={formData.slug}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                slug: generateSlug(e.target.value),
-              })
-            }
-            className="flex-1 border px-4 py-2 rounded-md bg-gray-50"
-          />
+            {/* Degree Type Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground">Degree Type</label>
+              <DegreeTypeSelect
+                value={formData.degreeTypeId}
+                onChange={(value) =>
+                  setFormData({ ...formData, degreeTypeId: value })
+                }
+                required
+              />
+            </div>
 
-          {/* Degree Type Dropdown */}
-          <DegreeTypeSelect
-            value={formData.degreeTypeId}
-            onChange={(value) =>
-              setFormData({ ...formData, degreeTypeId: value })
-            }
-            required
-          />
+            {/* Status & Submit */}
+            <div className="flex items-end gap-6">
+              <div className="flex-1 flex items-center h-[46px]">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          isActive: e.target.checked,
+                        })
+                      }
+                      className="peer sr-only"
+                    />
+                    <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </div>
+                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Active</span>
+                </label>
+              </div>
+            </div>
+          </div>
 
-
-
-          {/* Active Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={formData.isActive}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  isActive: e.target.checked,
-                })
-              }
-            />
-            <span className="text-sm font-medium">Active</span>
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2 rounded-md bg-black text-white"
-        >
-          {loading ? "Creating..." : "Add Course"}
-        </button>
-      </form>
+          <div className="flex justify-end pt-4 border-t border-border/50">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center gap-2 h-auto"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  Creating...
+                </>
+              ) : (
+                "Add Course"
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
 
       {/* ---------------------------------- */}
       {/* Table */}
       {/* ---------------------------------- */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4">Name</th>
-              <th className="p-4">Slug</th>
-              <th className="p-4">Degree Type</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Actions</th>
-            </tr>
-          </thead>
+      <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
+        <div className="p-6 border-b border-border/40 bg-muted/20">
+          <h2 className="text-lg font-semibold">Course List</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-muted/30">
+              <tr>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Slug</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Degree Type</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {courses.map((course) => (
-              <tr key={course._id} className="border-b hover:bg-gray-50">
-
-                {/* Name */}
-                <td className="p-4 font-medium">
-                  {editingId === course._id ? (
-                    <input
-                      value={formData.name}
-                      onChange={(e) => {
-                        const nameValue = e.target.value;
-                        setFormData({
-                          ...formData,
-                          name: nameValue,
-                          slug: generateSlug(nameValue),
-                        });
-                      }}
-                      className="border px-2 py-1 rounded w-full"
-                    />
-                  ) : (
-                    course.name
-                  )}
-                </td>
-
-                {/* Slug */}
-                <td className="p-4">
-                  {editingId === course._id ? (
-                    <input
-                      value={formData.slug}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          slug: generateSlug(e.target.value),
-                        })
-                      }
-                      className="border px-2 py-1 rounded w-full"
-                    />
-                  ) : (
-                    course.slug
-                  )}
-                </td>
-
-                {/* Degree Type */}
-                <td className="p-4">
-                  {editingId === course._id ? (
-                    <DegreeTypeSelect
-                      value={formData.degreeTypeId}
-                      onChange={(value) =>
-                        setFormData({
-                          ...formData,
-                          degreeTypeId: value,
-                        })
-                      }
-                      required
-                    />
-                  ) : (
-                    course.degreeTypeId?.name
-                  )}
-                </td>
-
-                {/* Status */}
-                <td className="p-4">
-                  {editingId === course._id ? (
-                    <label className="flex items-center gap-2 cursor-pointer">
+            <tbody className="divide-y divide-border/40">
+              {courses.map((course) => (
+                <tr key={course._id} className="hover:bg-muted/30 transition-colors group">
+                  {/* Name */}
+                  <td className="px-6 py-4">
+                    {editingId === course._id ? (
                       <input
-                        type="checkbox"
-                        checked={formData.isActive}
-                        onChange={(e) =>
+                        value={formData.name}
+                        onChange={(e) => {
+                          const nameValue = e.target.value;
                           setFormData({
                             ...formData,
-                            isActive: e.target.checked,
+                            name: nameValue,
+                            slug: generateSlug(nameValue),
+                          });
+                        }}
+                        className="w-full border border-border/50 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                      />
+                    ) : (
+                      <span className="font-semibold text-foreground">{course.name}</span>
+                    )}
+                  </td>
+
+                  {/* Slug */}
+                  <td className="px-6 py-4">
+                    {editingId === course._id ? (
+                      <input
+                        value={formData.slug}
+                        readOnly
+                        className="w-full border border-border/40 px-3 py-1.5 rounded-lg bg-muted/50 text-muted-foreground outline-none"
+                      />
+                    ) : (
+                      <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-mono">{course.slug}</code>
+                    )}
+                  </td>
+
+                  {/* Degree Type */}
+                  <td className="px-6 py-4">
+                    {editingId === course._id ? (
+                      <DegreeTypeSelect
+                        value={formData.degreeTypeId}
+                        onChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            degreeTypeId: value,
                           })
                         }
-                        className="w-4 h-4"
+                        required
                       />
-                      <span className="text-sm font-medium">Active</span>
-                    </label>
-                  ) : (
-                    <span className={`px-3 py-1 rounded-full text-sm ${course.isActive
-                        ? "bg-green-100 text-gray-900"
-                        : "bg-gray-200 text-gray-800"
-                      }`}>
-                      {course.isActive ? "Active" : "Inactive"}
-                    </span>
-                  )}
-                </td>
+                    ) : (
+                      <span className="text-muted-foreground">{course.degreeTypeId?.name}</span>
+                    )}
+                  </td>
 
-                {/* Actions */}
-                <td className="p-4 flex gap-4">
-                  {editingId === course._id ? (
-                    <>
-                      <button
-                        onClick={() => handleUpdate(course._id)}
-                        className="text-gray-600 font-medium"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="text-gray-500"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => handleEdit(course)}
-                        className="text-blue-600 font-medium"
-                      >
-                        Edit
-                      </button>
+                  {/* Status */}
+                  <td className="px-6 py-4">
+                    {editingId === course._id ? (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.isActive}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                isActive: e.target.checked,
+                              })
+                            }
+                            className="peer sr-only"
+                          />
+                          <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </div>
+                      </label>
+                    ) : (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.isActive
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : "bg-muted text-muted-foreground"
+                        }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${course.isActive ? "bg-emerald-500" : "bg-muted-foreground/50"}`}></span>
+                        {course.isActive ? "Active" : "Inactive"}
+                      </span>
+                    )}
+                  </td>
 
-                      <button
-                        onClick={() => handleDelete(course._id)}
-                        className="text-red-600 font-medium"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </td>
+                  {/* Actions */}
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-3">
+                      {editingId === course._id ? (
+                        <>
+                          <Button
+                            onClick={() => handleUpdate(course._id)}
+                            size="sm"
+                            className="px-4 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors h-auto"
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => setEditingId(null)}
+                            variant="secondary"
+                            size="sm"
+                            className="px-4 py-1.5 bg-muted text-muted-foreground text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors h-auto"
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(course)}
+                            className="text-muted-foreground hover:text-primary hover:bg-muted"
+                            title="Edit"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                          </Button>
 
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(course._id)}
+                            className="text-muted-foreground hover:text-red-600 hover:bg-rose-500/10"
+                            title="Delete"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

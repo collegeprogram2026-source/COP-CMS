@@ -13,7 +13,7 @@ export async function GET(req) {
 
     // Call the backend API, forwarding cookies so Clerk middleware can validate
     const backendUrl = process.env.NEXT_PUBLIC_APP_BACKEND_URL || "http://localhost:5000"
-    const res = await fetch(`${backendUrl}/api/debug/user-info`, {
+    const res = await fetch(`${backendUrl}/api/admin/users/self`, {
       headers: {
         "Content-Type": "application/json",
         Cookie: req.headers.get("cookie") || "",

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
+import { Button } from "@/components/ui/button";
 
 const CALL_STATUS_OPTIONS = [
-  { value: "pending", label: "Pending", color: "bg-gray-100" },
+  { value: "pending", label: "Pending", color: "bg-muted" },
   { value: "called", label: "Called", color: "bg-blue-100" },
   { value: "did_not_answer", label: "Did Not Answer", color: "bg-red-100" },
   { value: "called_and_helped", label: "Called & Helped", color: "bg-green-100" },
@@ -34,14 +34,14 @@ export default function LeadsPage() {
       if (filterStatus) {
         url += `?status=${filterStatus}`;
       }
-      const res = await callApi(url, { cache: "no-store", auth: true });
+      const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
-      
+
       if (!res.ok) {
         console.error("API error:", data);
         return;
       }
-      
+
       setLeads(data);
     } catch (err) {
       console.error("Error fetching leads:", err);
@@ -49,18 +49,18 @@ export default function LeadsPage() {
   };
 
 
-    useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
-        await fetchLeads();
+      await fetchLeads();
     };
 
     loadData();
-    }, [filterStatus]);
+  }, [filterStatus]);
 
 
-//   useEffect(() => {
-//     fetchLeads();
-//   }, [filterStatus]);
+  //   useEffect(() => {
+  //     fetchLeads();
+  //   }, [filterStatus]);
 
   /* ---------------------------------- */
   /* Edit Lead */
@@ -94,10 +94,10 @@ export default function LeadsPage() {
 
     console.log("Updating lead id", id, "payload:", payload);
 
-    await callApi(`/api/admin/leads/${id}`, {
+    await fetch(`/api/admin/leads/${id}`, {
       method: "PUT",
-      auth: true,
-      body: payload,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     setEditingId(null);
@@ -112,9 +112,8 @@ export default function LeadsPage() {
     const confirmDelete = confirm("Delete this lead?");
     if (!confirmDelete) return;
 
-    await callApi(`/api/admin/leads/${id}`, {
+    await fetch(`/api/admin/leads/${id}`, {
       method: "DELETE",
-      auth: true,
     });
 
     fetchLeads();
@@ -122,7 +121,7 @@ export default function LeadsPage() {
 
   const getStatusColor = (status) => {
     const option = CALL_STATUS_OPTIONS.find((o) => o.value === status);
-    return option?.color || "bg-gray-100";
+    return option?.color || "bg-muted";
   };
 
   const getStatusLabel = (status) => {
@@ -131,183 +130,209 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-3 text-gray-800">
-      <h1 className="text-2xl font-bold mb-6">Leads Management</h1>
-
-      {/* ---------------------------------- */}
-      {/* Filter Section */}
-      {/* ---------------------------------- */}
-      <div className="mb-6 flex gap-3">
-        <label className="flex items-center gap-2">
-          <span className="text-sm font-medium">Filter by Status:</span>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="border px-4 py-2 rounded-md"
-          >
-            <option value="">All Leads</option>
-            {CALL_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {/* ---------------------------------- */}
-      {/* Leads Table */}
-      {/* ---------------------------------- */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-3">Name</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Phone</th>
-              <th className="p-3">Course Interest</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Assigned To</th>
-              <th className="p-3">Notes</th>
-              <th className="p-3">Last Updated</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {leads.map((lead) => (
-              <tr key={lead._id} className="border-b hover:bg-gray-50">
-                {/* Name */}
-                <td className="p-3 font-medium">{lead.name}</td>
-
-                {/* Email */}
-                <td className="p-3 text-xs">{lead.email}</td>
-
-                {/* Phone */}
-                <td className="p-3 text-xs">{lead.phone}</td>
-
-                {/* Course Interest */}
-                <td className="p-3 text-xs truncate max-w-xs">
-                  {lead.courseOfInterest || "-"}
-                </td>
-
-                {/* Status */}
-                <td className="p-3">
-                  {editingId === lead._id ? (
-                    <select
-                      value={formData.callStatus}
-                      onChange={(e) =>
-                        setFormData({ ...formData, callStatus: e.target.value })
-                      }
-                      className="border px-2 py-1 rounded text-sm"
-                    >
-                      {CALL_STATUS_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span
-                      className={`px-3 py-1 rounded text-xs font-medium ${getStatusColor(
-                        lead.callStatus
-                      )}`}
-                    >
-                      {getStatusLabel(lead.callStatus)}
-                    </span>
-                  )}
-                </td>
-
-                {/* Assigned To */}
-                <td className="p-3">
-                  {editingId === lead._id ? (
-                    <input
-                      type="text"
-                      placeholder="Counselor name"
-                      value={formData.assignedTo}
-                      onChange={(e) =>
-                        setFormData({ ...formData, assignedTo: e.target.value })
-                      }
-                      className="border px-2 py-1 rounded w-full text-sm"
-                    />
-                  ) : (
-                    <span className="text-xs">{lead.assignedTo || "-"}</span>
-                  )}
-                </td>
-
-                {/* Notes */}
-                <td className="p-3">
-                  {editingId === lead._id ? (
-                    <textarea
-                      placeholder="Add update or notes"
-                      value={formData.notes}
-                      onChange={(e) =>
-                        setFormData({ ...formData, notes: e.target.value })
-                      }
-                      className="border px-2 py-1 rounded w-full text-sm"
-                      rows="2"
-                    />
-                  ) : (
-                    <span className="text-xs truncate block max-w-xs">
-                      {lead.notes || "-"}
-                    </span>
-                  )}
-                </td>
-
-                {/* Last Updated */}
-                <td className="p-3 text-xs">
-                  {lead.lastUpdated
-                    ? new Date(lead.lastUpdated).toLocaleDateString()
-                    : "-"}
-                </td>
-
-                {/* Actions */}
-                <td className="p-3 flex gap-2">
-                  {editingId === lead._id ? (
-                    <>
-                      <button
-                        onClick={() => handleUpdate(lead._id)}
-                        disabled={loading}
-                        className="text-green-600 font-medium text-sm hover:underline"
-                      >
-                        {loading ? "Saving..." : "Save"}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="text-gray-500 text-sm hover:underline"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => handleEdit(lead)}
-                        className="text-blue-600 font-medium text-sm hover:underline"
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(lead._id)}
-                        className="text-red-600 font-medium text-sm hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {leads.length === 0 && (
-          <div className="p-6 text-gray-500 text-center">
-            No Leads Found
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Leads Management</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-2">
+              Track and manage all customer inquiries and leads
+            </p>
           </div>
-        )}
+
+          <div className="flex items-center gap-3 bg-card p-1.5 rounded-xl border border-border shadow-sm">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-3">Filter by Status</span>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-muted border-none text-xs font-bold text-foreground px-4 py-2 rounded-lg focus:ring-2 focus:ring-border outline-none transition-all cursor-pointer"
+            >
+              <option value="">All Leads</option>
+              {CALL_STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Leads Table */}
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden text-foreground">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-background border-b border-border/50">
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Name</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Contact</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Interest</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Assignment</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Notes</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Updated</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-right">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-border/50">
+                {leads.map((lead) => (
+                  <tr key={lead._id} className="group hover:bg-muted transition-colors">
+                    {/* Name */}
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-foreground tracking-tight">{lead.name}</span>
+                    </td>
+
+                    {/* Contact */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-muted-foreground tracking-tight">{lead.email}</span>
+                        <span className="text-[11px] font-medium text-muted-foreground tracking-tight">{lead.phone}</span>
+                      </div>
+                    </td>
+
+                    {/* Course Interest */}
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg border border-border/50">
+                        {lead.courseOfInterest || "General"}
+                      </span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      {editingId === lead._id ? (
+                        <select
+                          value={formData.callStatus}
+                          onChange={(e) =>
+                            setFormData({ ...formData, callStatus: e.target.value })
+                          }
+                          className="bg-muted border border-border px-2 py-1.5 rounded-lg text-xs font-bold text-foreground outline-none"
+                        >
+                          {CALL_STATUS_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getStatusColor(
+                            lead.callStatus
+                          )}`}
+                        >
+                          {getStatusLabel(lead.callStatus)}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Assigned To */}
+                    <td className="px-6 py-4">
+                      {editingId === lead._id ? (
+                        <input
+                          type="text"
+                          placeholder="Counselor"
+                          value={formData.assignedTo}
+                          onChange={(e) =>
+                            setFormData({ ...formData, assignedTo: e.target.value })
+                          }
+                          className="bg-muted border border-border px-3 py-1.5 rounded-lg text-xs font-medium text-foreground w-full outline-none focus:ring-2 focus:ring-border/50 transition-all"
+                        />
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground">{lead.assignedTo || "-"}</span>
+                      )}
+                    </td>
+
+                    {/* Notes */}
+                    <td className="px-6 py-4">
+                      {editingId === lead._id ? (
+                        <textarea
+                          placeholder="Add notes..."
+                          value={formData.notes}
+                          onChange={(e) =>
+                            setFormData({ ...formData, notes: e.target.value })
+                          }
+                          className="bg-muted border border-border px-3 py-1.5 rounded-lg text-xs font-medium text-foreground w-full outline-none focus:ring-2 focus:ring-border/50 transition-all min-w-[200px]"
+                          rows="2"
+                        />
+                      ) : (
+                        <span className="text-xs text-muted-foreground truncate block max-w-[150px]" title={lead.notes}>
+                          {lead.notes || "-"}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Last Updated */}
+                    <td className="px-6 py-4">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+                        {lead.lastUpdated
+                          ? new Date(lead.lastUpdated).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+                          : "-"}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-3">
+                        {editingId === lead._id ? (
+                          <>
+                            <Button
+                              onClick={() => handleUpdate(lead._id)}
+                              disabled={loading}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors h-auto"
+                            >
+                              {loading ? "Saving..." : "Save"}
+                            </Button>
+                            <Button
+                              onClick={() => setEditingId(null)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs font-bold text-muted-foreground hover:text-muted-foreground transition-colors h-auto"
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => handleEdit(lead)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors h-auto"
+                            >
+                              Edit
+                            </Button>
+
+                            <Button
+                              onClick={() => handleDelete(lead._id)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs font-bold text-rose-500 hover:text-rose-700 transition-colors h-auto"
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {leads.length === 0 && (
+            <div className="p-20 text-center">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 border border-border/50">
+                <span className="text-2xl">📋</span>
+              </div>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em]">No Leads Found</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+

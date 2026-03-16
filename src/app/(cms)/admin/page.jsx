@@ -6,29 +6,31 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { BookOpen, Building2, MessageSquare, Star, GraduationCap, Briefcase, Layers } from "lucide-react";
+import { BookOpen, Building2, MessageSquare, Star } from "lucide-react";
 import { callApi } from "@/lib/apiClient";
 
 // ─── Stat Card ────────────────────────────────────────────────────────
 
 function StatCard({ title, value, icon: Icon, trend }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-          <Icon size={18} />
+    <div className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-md transition-all duration-300 group">
+      <div className="flex items-start justify-between mb-5">
+        <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-muted/80 transition-colors">
+          <Icon size={20} />
         </div>
         {trend !== undefined && (
-          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${trend >= 0
-            ? "bg-emerald-50 text-emerald-600"
-            : "bg-red-50 text-red-500"
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${trend >= 0
+            ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+            : "bg-rose-500/10 text-red-500 border-red-100 dark:bg-rose-500/100/10 dark:text-red-400 dark:border-red-500/20 dark:bg-rose-500/100/10 dark:text-red-400 dark:border-red-500/20"
             }`}>
             {trend >= 0 ? "↑" : "↓"} {Math.abs(trend)}%
           </span>
         )}
       </div>
-      <p className="text-3xl font-bold text-slate-800 mb-1">{value.toLocaleString()}</p>
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{title}</p>
+      <div>
+        <p className="text-3xl font-bold text-foreground mb-1">{value.toLocaleString()}</p>
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{title}</p>
+      </div>
     </div>
   );
 }
@@ -38,11 +40,11 @@ function StatCard({ title, value, icon: Icon, trend }) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border-2 border-slate-200 rounded-xl px-4 py-3 shadow-lg">
-      <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">{label}</p>
+    <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl px-4 py-3 shadow-xl ring-1 ring-black/5">
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{label}</p>
       {payload.map((p) => (
-        <p key={p.name} className="text-sm font-bold text-slate-800">
-          {p.value} <span className="text-slate-400 font-normal">{p.name}</span>
+        <p key={p.name} className="text-sm font-extrabold text-foreground">
+          {p.value} <span className="text-muted-foreground font-medium ml-1">{p.name}</span>
         </p>
       ))}
     </div>
@@ -53,16 +55,16 @@ function CustomTooltip({ active, payload, label }) {
 
 function ChartPanel({ title, subtitle, children, empty }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-5 border-b border-slate-100">
-        <h2 className="text-sm font-bold text-slate-700">{title}</h2>
-        {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="px-6 py-5 border-b border-border/50 bg-muted/30">
+        <h2 className="text-base font-bold text-foreground tracking-tight">{title}</h2>
+        {subtitle && <p className="text-xs font-medium text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
       <div className="p-6">
         {empty ? (
-          <div className="flex flex-col items-center justify-center h-64 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 gap-2">
-            <span className="text-2xl">📊</span>
-            <p className="text-xs">No data available yet</p>
+          <div className="flex flex-col items-center justify-center h-64 rounded-xl border-2 border-dashed border-border text-muted-foreground/30 gap-2">
+            <span className="text-2xl opacity-50">📊</span>
+            <p className="text-xs font-medium">No data available yet</p>
           </div>
         ) : (
           children
@@ -75,15 +77,7 @@ function ChartPanel({ title, subtitle, children, empty }) {
 // ─── Main Dashboard ───────────────────────────────────────────────────
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    courses: 0,
-    providers: 0,
-    leads: 0,
-    reviews: 0,
-    degreeTypes: 0,
-    specializations: 0,
-    providerCourses: 0
-  });
+  const [stats, setStats] = useState({ courses: 0, providers: 0, leads: 0, reviews: 0 });
   const [reviewsByRating, setReviewsByRating] = useState([]);
   const [leadsBySource, setLeadsBySource] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,43 +104,43 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-sm text-slate-400">Loading dashboard...</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-[3px] border-muted border-t-primary rounded-full animate-spin" />
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
+          Loading Dashboard
+        </p>
       </div>
     );
   }
 
   const statCards = [
     { title: "Total Courses", value: stats.courses, icon: BookOpen },
-    { title: "Degree Types", value: stats.degreeTypes, icon: GraduationCap },
-    { title: "Specializations", value: stats.specializations, icon: Layers },
-    { title: "Provider Courses", value: stats.providerCourses, icon: Briefcase },
     { title: "Total Providers", value: stats.providers, icon: Building2 },
     { title: "Total Leads", value: stats.leads, icon: MessageSquare },
     { title: "Total Reviews", value: stats.reviews, icon: Star },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-6 py-10">
 
         {/* ── Page Header ── */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Welcome back — heres whats happening today.
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Dashboard Overview</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-2">
+            Welcome back — here&apos;s what&apos;s happening today.
           </p>
         </div>
 
         {/* ── Stat Cards ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {statCards.map((card) => (
             <StatCard key={card.title} {...card} />
           ))}
         </div>
 
         {/* ── Charts ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* Reviews by Rating */}
           <ChartPanel
@@ -154,17 +148,18 @@ export default function AdminDashboard() {
             subtitle="Distribution of review scores"
             empty={reviewsByRating.length === 0}
           >
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={reviewsByRating} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={reviewsByRating} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} vertical={false} />
                 <XAxis
                   dataKey="_id"
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
+                  dy={10}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -172,10 +167,10 @@ export default function AdminDashboard() {
                 <Line
                   type="monotone"
                   dataKey="count"
-                  stroke="#1e293b"
-                  strokeWidth={2.5}
-                  dot={{ fill: "#1e293b", strokeWidth: 0, r: 4 }}
-                  activeDot={{ r: 6, fill: "#1e293b" }}
+                  stroke="var(--primary)"
+                  strokeWidth={3}
+                  dot={{ fill: "var(--primary)", strokeWidth: 0, r: 4 }}
+                  activeDot={{ r: 6, fill: "var(--primary)" }}
                   name="Reviews"
                 />
               </LineChart>
@@ -188,27 +183,28 @@ export default function AdminDashboard() {
             subtitle="Where your leads are coming from"
             empty={leadsBySource.length === 0}
           >
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={leadsBySource} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={leadsBySource} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} vertical={false} />
                 <XAxis
                   dataKey="_id"
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
+                  dy={10}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)", fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.4 }} />
                 <Bar
                   dataKey="count"
-                  fill="#1e293b"
+                  fill="var(--primary)"
                   name="Leads"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={48}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
                 />
               </BarChart>
             </ResponsiveContainer>
