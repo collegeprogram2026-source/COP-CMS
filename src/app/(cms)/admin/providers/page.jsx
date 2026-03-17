@@ -464,7 +464,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
                 />
                 Mark admissions as currently open
               </label>
-              <span className="text-xs text-slate-400">— enables the "Admission Open" badge on the provider card</span>
+              <span className="text-xs text-slate-400">— enables the `Admission Open` badge on the provider card</span>
             </div>
 
             <Field label="Admission Year" span={3} hint='The intake year, e.g. "2025"'>
@@ -841,7 +841,7 @@ export default function ProvidersPage() {
             <div className="p-16 text-center space-y-2">
               <p className="text-2xl">🏫</p>
               <p className="text-slate-500 text-sm font-semibold">No providers yet</p>
-              <p className="text-slate-400 text-xs">Click "+ New Provider" to add your first one.</p>
+              <p className="text-slate-400 text-xs">Click `+ New Provider` to add your first one.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -883,7 +883,7 @@ export default function ProvidersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1">
                           <button
                             onClick={() => handleEdit(item)}
                             className="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
