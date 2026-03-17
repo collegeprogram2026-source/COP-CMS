@@ -18,7 +18,7 @@ export default function TextBlock({ value, onChange }) {
     content: value,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(editor.getJSON());
     },
   });
 

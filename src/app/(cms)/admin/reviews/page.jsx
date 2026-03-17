@@ -30,7 +30,7 @@ export default function ReviewsPage() {
 
     // Filter by provider
     if (selectedProvider) {
-      filtered = filtered.filter((r) => r.providerId._id === selectedProvider)
+      filtered = filtered.filter((r) => r.providerId?._id === selectedProvider)
     }
 
     setFilteredReviews(filtered)
@@ -63,12 +63,12 @@ export default function ReviewsPage() {
 
   const toggleReviewStatus = async (id, currentStatus) => {
     try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
+      const res = await callApi(`/api/admin/reviews/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !currentStatus }),
+        auth: true,
+        body: { isActive: !currentStatus },
       })
-      if (!res.ok) throw new Error("Failed to update review")
+      if (!res.ok) throw new Error("Failed to update status")
       fetchReviews()
     } catch (err) {
       setError(err.message)
@@ -78,8 +78,9 @@ export default function ReviewsPage() {
   const deleteReview = async (id) => {
     if (!confirm("Are you sure you want to delete this review?")) return
     try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
+      const res = await callApi(`/api/admin/reviews/${id}`, {
         method: "DELETE",
+        auth: true
       })
       if (!res.ok) throw new Error("Failed to delete review")
       fetchReviews()
@@ -184,7 +185,7 @@ export default function ReviewsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
-                        {review.providerId?.name || "Unknown"}
+                        {review.providerId?.name || "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="flex items-center">
@@ -195,15 +196,16 @@ export default function ReviewsPage() {
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="max-w-xs">
                           <p className="font-medium">{review.title}</p>
-                          <p className="text-gray-500 text-xs truncate">{review.comment}</p>
+                          <p className="text-gray-500 text-xs line-clamp-2">{review.comment}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <button
                           onClick={() => toggleReviewStatus(review._id, review.isActive)}
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${review.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
+                          title="Click to toggle status"
+                          className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 ${review.isActive
+                            ? "bg-green-100 text-green-800 border border-green-200"
+                            : "bg-gray-100 text-gray-800 border border-gray-200"
                             }`}
                         >
                           {review.isActive ? "Active" : "Inactive"}
@@ -212,7 +214,7 @@ export default function ReviewsPage() {
                       <td className="px-6 py-4 text-sm">
                         <button
                           onClick={() => deleteReview(review._id)}
-                          className="text-red-600 hover:text-red-800 font-medium"
+                          className="text-red-600 hover:text-red-800 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                         >
                           Delete
                         </button>

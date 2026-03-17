@@ -14,6 +14,7 @@ import {
   ChevronDown,
   LogOut,
 } from "lucide-react";
+import { callApi } from "@/lib/apiClient";
 
 const sidebarItems = [
   {
@@ -70,7 +71,7 @@ export default function AdminSidebar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await fetch("/api/debug/user-info");
+        const res = await callApi("/api/admin/users/self", { auth: true });
         if (res.ok) {
           const data = await res.json();
           setUserData(data);
