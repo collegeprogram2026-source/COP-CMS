@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/apiClient";
 import ContentBuilder from "../components/ContentBuilder";
 import TextBlock from "../components/TextBlock";
+import {
+  GraduationCap,
+  Image as ImageIcon,
+  Star,
+  ClipboardList,
+  MapPin,
+  HelpCircle,
+  Award,
+  Search,
+  Building2,
+} from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -82,11 +93,15 @@ function SectionHeader({ title, count }) {
   );
 }
 
-function FormSection({ icon, title, description, children }) {
+function FormSection({ icon: Icon, title, description, children }) {
   return (
     <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden mb-8">
       <div className="flex items-center gap-3 px-8 py-4 border-b border-border/40 bg-muted/20">
-        <span className="text-lg">{icon}</span>
+        {Icon && (
+          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
+            <Icon className="w-4 h-4" />
+          </span>
+        )}
         <div>
           <h3 className="text-sm font-bold text-foreground tracking-tight">{title}</h3>
           {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
@@ -262,7 +277,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
       <form onSubmit={onSubmit} className="p-8 space-y-8">
 
         {/* ── 1. Identity ── */}
-        <FormSection icon="🏫" title="Identity" description="Core identification fields shown across the platform">
+        <FormSection icon={GraduationCap} title="Identity" description="Core identification fields shown across the platform">
           <div className="grid grid-cols-12 gap-6">
 
             <Field label="Provider Name" span={6} required hint="Full official name, e.g. Amity University Online">
@@ -347,7 +362,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         </FormSection>
 
         {/* ── 2. Branding & Media ── */}
-        <FormSection icon="🖼️" title="Branding & Media" description="Logos and imagery">
+        <FormSection icon={ImageIcon} title="Branding & Media" description="Logos and imagery">
           <div className="grid grid-cols-12 gap-6">
             <Field label="Logo URL" span={6} hint="University logo URL">
               <input type="text" placeholder="https://..." value={form.logo} onChange={(e) => setForm({ ...form, logo: e.target.value })} className={inp} />
@@ -366,7 +381,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         </FormSection>
 
         {/* ── 3. Ratings ── */}
-        <FormSection icon="⭐" title="Ratings" description="Provider ratings and scores">
+        <FormSection icon={Star} title="Ratings" description="Provider ratings and scores">
           <div className="grid grid-cols-12 gap-6">
             <Field label="Average Rating" span={3}>
               <input type="number" min="0" max="5" step="0.1" value={form.averageRating} onChange={(e) => setForm({ ...form, averageRating: parseFloat(e.target.value) || 0 })} className={inp} />
@@ -394,7 +409,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         </FormSection>
 
         {/* ── 4. Admissions ── */}
-        <FormSection icon="📋" title="Admissions" description="Admission status and details">
+        <FormSection icon={ClipboardList} title="Admissions" description="Admission status and details">
           <div className="grid grid-cols-12 gap-6">
             <Field label="Admissions Open" span={2}>
               <div className="flex items-center h-[46px]">
@@ -460,7 +475,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             />
           </DescribedList>
 
-          <FormSection title="Campuses" icon="📍" description="Geographical locations">
+          <FormSection title="Campuses" icon={MapPin} description="Geographical locations">
             <ArrayEditor
               fieldName="campuses"
               form={form} setForm={setForm}
@@ -490,7 +505,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             />
           </DescribedList>
 
-          <FormSection title="FAQ" icon="❓" description="Frequently asked questions">
+          <FormSection title="FAQ" icon={HelpCircle} description="Frequently asked questions">
             <ArrayEditor
               fieldName="faq"
               form={form} setForm={setForm}
@@ -502,7 +517,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         </div>
 
         {/* ── 6. Certification ── */}
-        <FormSection icon="📜" title="Certification" description="Sample certificate details">
+        <FormSection icon={Award} title="Certification" description="Sample certificate details">
           <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12">
               <InlineLabel>Certificate Description</InlineLabel>
@@ -518,7 +533,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         </FormSection>
 
         {/* ── 7. SEO ── */}
-        <FormSection icon="🔍" title="SEO" description="Search engine optimization metadata">
+        <FormSection icon={Search} title="SEO" description="Search engine optimization metadata">
           <div className="grid grid-cols-12 gap-6">
             <Field label="Meta Title" span={6} hint="Ideal: 50–60 chars">
               <input type="text" placeholder="Page title..." value={form.metaTitle} onChange={(e) => setForm({ ...form, metaTitle: e.target.value })} className={inp} />
@@ -743,7 +758,11 @@ export default function ProvidersPage() {
             </div>
           ) : providers.length === 0 ? (
             <div className="p-16 text-center text-muted-foreground">
-              <div className="mb-4 text-4xl">🏢</div>
+              <div className="mb-4 flex items-center justify-center">
+                <span className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted">
+                  <Building2 className="w-8 h-8 text-muted-foreground/60" />
+                </span>
+              </div>
               <p className="text-lg font-medium">No providers yet</p>
               <p className="text-sm">Create your first university or edtech platform above.</p>
             </div>
@@ -774,9 +793,13 @@ export default function ProvidersPage() {
                       </td>
                       <td className="px-6 py-4">
                         {item.isFeatured ? (
-                          <span className="flex items-center justify-center w-6 h-6 bg-amber-500/10 rounded-full text-amber-500">★</span>
+                          <span className="flex items-center justify-center w-6 h-6 bg-amber-500/10 rounded-full text-amber-500">
+                            <Star className="w-3.5 h-3.5 fill-amber-500" />
+                          </span>
                         ) : (
-                          <span className="text-muted-foreground/20">☆</span>
+                          <span className="flex items-center justify-center w-6 h-6 text-muted-foreground/20">
+                            <Star className="w-3.5 h-3.5" />
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
