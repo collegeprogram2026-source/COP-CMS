@@ -204,8 +204,8 @@ export default function ReviewsPage() {
                           variant="ghost"
                           size="sm"
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider transition-all hover:scale-105 active:scale-95 h-auto ${review.isActive
-                              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                              : "bg-muted text-muted-foreground border-border"
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                            : "bg-muted text-muted-foreground border-border"
                             }`}
                         >
                           {review.isActive ? "Active" : "Inactive"}
