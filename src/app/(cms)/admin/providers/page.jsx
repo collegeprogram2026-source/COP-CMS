@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/apiClient";
+import ContentBuilder from "../components/ContentBuilder";
+import TextBlock from "../components/TextBlock";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -15,11 +18,13 @@ const EMPTY_FORM = {
   slug: "",
   type: "University",
   shortExcerpt: "",
+  contentBlocks: [],
   logo: "",
   coverImage: "",
+  galleryDescription: null,
   galleryImages: [],
   isFeatured: false,
-  isActive: true,
+  isActive: "active",
   publicationStatus: "draft",
   // Ratings
   averageRating: 0,
@@ -31,17 +36,23 @@ const EMPTY_FORM = {
     valueForMoney: 0,
   },
   // Arrays
+  scholarshipDescription: null,
   scholarships: [],
+  approvalsDescription: null,
   approvals: [],
+  rankingsDescription: null,
   rankings: [],
+  factsDescription: null,
   facts: [],
   campuses: [],
+  placementPartnersDescription: null,
   placementPartners: [],
   faq: [],
   // Media
+  sampleCertificateDescription: null,
   sampleCertificateImage: "",
   // Admission
-  admissionOpen: { isOpen: false, year: "", text: "" },
+  admissionOpen: { isOpen: false, year: "", text: "", description: null },
   // SEO
   metaTitle: "",
   metaDescription: "",
@@ -184,6 +195,26 @@ function GalleryEditor({ form, setForm }) {
   );
 }
 
+// ─── Description + List combo ─────────────────────────────────────────────────
+
+function DescribedList({ title, descriptionKey, form, setForm, children }) {
+  return (
+    <div className="space-y-4">
+      <SectionHeader title={title} />
+      <div className="mb-4">
+        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+          Section Description
+        </label>
+        <TextBlock
+          value={form[descriptionKey]}
+          onChange={(val) => setForm({ ...form, [descriptionKey]: val })}
+        />
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ─── Provider Form ────────────────────────────────────────────────────────────
 
 function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel }) {
@@ -254,11 +285,16 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
                   <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Featured</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="peer sr-only" />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  <div className="relative flex items-center h-full">
+                    <select
+                      value={form.isActive}
+                      onChange={(e) => setForm({ ...form, isActive: e.target.value })}
+                      className={sel + " py-1 h-8 text-xs"}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </div>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Active</span>
                 </label>
               </div>
             </Field>
@@ -273,6 +309,13 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               />
             </Field>
 
+            <div className="col-span-6">
+              <label className="text-xs font-bold text-foreground uppercase tracking-wide mb-2 block">
+                Full Content (Rich Blocks)
+              </label>
+              <ContentBuilder form={{ content: form.contentBlocks }} setForm={(v) => setForm({ ...form, contentBlocks: v.content })} />
+            </div>
+
             <Field label="logo" span={3} hint="University logo URL (header + cards)">
               <input type="text" placeholder="https://..." value={form.logo} onChange={(e) => setForm({ ...form, logo: e.target.value })} className={inp} />
             </Field>
@@ -281,8 +324,10 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               <input type="text" placeholder="https://..." value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} className={inp} />
             </Field>
 
-            <div className="col-span-6">
-              <GalleryEditor form={form} setForm={setForm} />
+            <div className="col-span-6 border-t pt-4 mt-2">
+              <DescribedList title="Gallery" descriptionKey="galleryDescription" form={form} setForm={setForm}>
+                <GalleryEditor form={form} setForm={setForm} />
+              </DescribedList>
             </div>
           </div>
         </div>
@@ -315,7 +360,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
 
         {/* ── ADMISSIONS ── */}
         <div>
-          <SectionHeader title="admissionOpen" />
+          <SectionHeader title="Admissions" />
           <div className="grid grid-cols-6 gap-4 p-4 bg-muted rounded-xl border border-border/50">
             <Field label="isOpen" span={2}>
               <div className="flex items-center h-[46px]">
@@ -334,35 +379,51 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             <Field label="admissionOpen.text" span={2} hint="Custom admission message">
               <input type="text" placeholder="Applications open for 2025 batch" value={form.admissionOpen.text} onChange={(e) => setForm({ ...form, admissionOpen: { ...form.admissionOpen, text: e.target.value } })} className={inp} />
             </Field>
+            <div className="col-span-6">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Admission Description</label>
+              <TextBlock
+                value={form.admissionOpen.description}
+                onChange={(val) => setForm({ ...form, admissionOpen: { ...form.admissionOpen, description: val } })}
+              />
+            </div>
           </div>
         </div>
 
         {/* ── STRUCTURED ARRAYS ── */}
         <div className="space-y-6">
-          <ArrayEditor
-            label="approvals"
-            fieldName="approvals"
-            form={form} setForm={setForm}
-            fields={[{ key: "name", label: "name (e.g. AICTE)" }, { key: "logo", label: "logo URL" }]}
-            template={{ name: "", logo: "" }}
-            addLabel="Add Approval"
-          />
-          <ArrayEditor
-            label="rankings"
-            fieldName="rankings"
-            form={form} setForm={setForm}
-            fields={[{ key: "title", label: "title" }, { key: "description", label: "description" }]}
-            template={{ title: "", description: "" }}
-            addLabel="Add Ranking"
-          />
-          <ArrayEditor
-            label="facts (Key Facts)"
-            fieldName="facts"
-            form={form} setForm={setForm}
-            fields={[{ key: "icon", label: "icon (optional)" }, { key: "text", label: "text" }]}
-            template={{ icon: "", text: "" }}
-            addLabel="Add Fact"
-          />
+          <DescribedList title="Approvals" descriptionKey="approvalsDescription" form={form} setForm={setForm}>
+            <ArrayEditor
+              label=""
+              fieldName="approvals"
+              form={form} setForm={setForm}
+              fields={[{ key: "name", label: "name (e.g. AICTE)" }, { key: "logo", label: "logo URL" }]}
+              template={{ name: "", logo: "" }}
+              addLabel="Add Approval"
+            />
+          </DescribedList>
+
+          <DescribedList title="Rankings" descriptionKey="rankingsDescription" form={form} setForm={setForm}>
+            <ArrayEditor
+              label=""
+              fieldName="rankings"
+              form={form} setForm={setForm}
+              fields={[{ key: "title", label: "title" }, { key: "description", label: "description" }]}
+              template={{ title: "", description: "" }}
+              addLabel="Add Ranking"
+            />
+          </DescribedList>
+
+          <DescribedList title="Facts" descriptionKey="factsDescription" form={form} setForm={setForm}>
+            <ArrayEditor
+              label=""
+              fieldName="facts"
+              form={form} setForm={setForm}
+              fields={[{ key: "icon", label: "icon (optional)" }, { key: "text", label: "text" }]}
+              template={{ icon: "", text: "" }}
+              addLabel="Add Fact"
+            />
+          </DescribedList>
+
           <ArrayEditor
             label="campuses"
             fieldName="campuses"
@@ -371,22 +432,29 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             template={{ city: "", state: "", country: "" }}
             addLabel="Add Campus"
           />
-          <ArrayEditor
-            label="placementPartners"
-            fieldName="placementPartners"
-            form={form} setForm={setForm}
-            fields={[{ key: "name", label: "name" }, { key: "logo", label: "logo URL" }]}
-            template={{ name: "", logo: "" }}
-            addLabel="Add Placement Partner"
-          />
-          <ArrayEditor
-            label="scholarships"
-            fieldName="scholarships"
-            form={form} setForm={setForm}
-            fields={[{ key: "category", label: "category" }, { key: "scholarshipCredit", label: "scholarshipCredit" }, { key: "eligibility", label: "eligibility" }]}
-            template={{ category: "", scholarshipCredit: "", eligibility: "" }}
-            addLabel="Add Scholarship"
-          />
+
+          <DescribedList title="Placement Partners" descriptionKey="placementPartnersDescription" form={form} setForm={setForm}>
+            <ArrayEditor
+              label=""
+              fieldName="placementPartners"
+              form={form} setForm={setForm}
+              fields={[{ key: "name", label: "name" }, { key: "logo", label: "logo URL" }]}
+              template={{ name: "", logo: "" }}
+              addLabel="Add Placement Partner"
+            />
+          </DescribedList>
+
+          <DescribedList title="Scholarships" descriptionKey="scholarshipDescription" form={form} setForm={setForm}>
+            <ArrayEditor
+              label=""
+              fieldName="scholarships"
+              form={form} setForm={setForm}
+              fields={[{ key: "category", label: "category" }, { key: "scholarshipCredit", label: "scholarshipCredit" }, { key: "eligibility", label: "eligibility" }]}
+              template={{ category: "", scholarshipCredit: "", eligibility: "" }}
+              addLabel="Add Scholarship"
+            />
+          </DescribedList>
+
           <ArrayEditor
             label="faq"
             fieldName="faq"
@@ -400,9 +468,18 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         {/* ── MEDIA ── */}
         <div>
           <SectionHeader title="Media" />
-          <Field label="sampleCertificateImage" hint="URL to sample certificate image">
-            <input type="text" placeholder="https://..." value={form.sampleCertificateImage} onChange={(e) => setForm({ ...form, sampleCertificateImage: e.target.value })} className={inp} />
-          </Field>
+          <div className="space-y-4">
+            <div>
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Certificate Description</label>
+              <TextBlock
+                value={form.sampleCertificateDescription}
+                onChange={(val) => setForm({ ...form, sampleCertificateDescription: val })}
+              />
+            </div>
+            <Field label="sampleCertificateImage" hint="URL to sample certificate image">
+              <input type="text" placeholder="https://..." value={form.sampleCertificateImage} onChange={(e) => setForm({ ...form, sampleCertificateImage: e.target.value })} className={inp} />
+            </Field>
+          </div>
         </div>
 
         {/* ── SEO ── */}
@@ -467,8 +544,10 @@ export default function ProvidersPage() {
   const fetchProviders = async () => {
     try {
       setFetchLoading(true);
-      const res = await fetch("/api/admin/providers", { cache: "no-store" });
-      setProviders(await res.json());
+      const res = await callApi("/api/admin/providers", { cache: "no-store", auth: true });
+      if (res.ok) {
+        setProviders(await res.json());
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -482,10 +561,10 @@ export default function ProvidersPage() {
     e.preventDefault();
     if (!form.name.trim()) return alert("name is required!");
     setLoading(true);
-    await fetch("/api/admin/providers", {
+    await callApi("/api/admin/providers", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      auth: true,
+      body: form,
     });
     setForm(EMPTY_FORM);
     setShowForm(false);
@@ -500,24 +579,32 @@ export default function ProvidersPage() {
       slug: item.slug || "",
       type: item.type || "University",
       shortExcerpt: item.shortExcerpt || "",
+      contentBlocks: item.contentBlocks || [],
       logo: item.logo || "",
       coverImage: item.coverImage || "",
+      galleryDescription: item.galleryDescription || null,
       galleryImages: item.galleryImages || [],
       isFeatured: item.isFeatured || false,
-      isActive: item.isActive ?? true,
+      isActive: item.isActive === true ? "active" : item.isActive === false ? "inactive" : (item.isActive || "active"),
       publicationStatus: item.publicationStatus || "draft",
       averageRating: item.averageRating || 0,
       reviewCount: item.reviewCount || 0,
       ratingBreakdown: item.ratingBreakdown || { averageRating: 0, digitalInfrastructure: 0, curriculum: 0, valueForMoney: 0 },
+      scholarshipDescription: item.scholarshipDescription || null,
       scholarships: item.scholarships || [],
+      approvalsDescription: item.approvalsDescription || null,
       approvals: item.approvals || [],
+      rankingsDescription: item.rankingsDescription || null,
       rankings: item.rankings || [],
+      factsDescription: item.factsDescription || null,
       facts: item.facts || [],
       campuses: item.campuses || [],
+      placementPartnersDescription: item.placementPartnersDescription || null,
       placementPartners: item.placementPartners || [],
       faq: item.faq || [],
+      sampleCertificateDescription: item.sampleCertificateDescription || null,
       sampleCertificateImage: item.sampleCertificateImage || "",
-      admissionOpen: item.admissionOpen || { isOpen: false, year: "", text: "" },
+      admissionOpen: item.admissionOpen || { isOpen: false, year: "", text: "", description: null },
       metaTitle: item.metaTitle || "",
       metaDescription: item.metaDescription || "",
       metaKeywords: item.metaKeywords || "",
@@ -531,10 +618,10 @@ export default function ProvidersPage() {
     e.preventDefault();
     if (!form.name.trim()) return setToast({ message: "name is required!", type: "error" });
     setLoading(true);
-    await fetch(`/api/admin/providers/${editingId}`, {
+    await callApi(`/api/admin/providers/${editingId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      auth: true,
+      body: form,
     });
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -675,11 +762,11 @@ export default function ProvidersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.isActive
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.isActive === "active" || item.isActive === true
                           ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
                           : "bg-muted text-muted-foreground border border-border/50"
                           }`}>
-                          {item.isActive ? "Active" : "Inactive"}
+                          {item.isActive === "active" || item.isActive === true ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">

@@ -6,6 +6,7 @@ import Link from "next/link";
 import TextBlock from "../../../components/TextBlock";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/apiClient";
 
 export default function PageContentPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function PageContentPage() {
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState(0);
+  const [activeSection, setActiveSection] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [toast, setToast] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -33,11 +34,16 @@ export default function PageContentPage() {
 
   const fetchPageAndContent = async () => {
     try {
-      const pageRes = await fetch(`/api/admin/pages/${slug}`);
+      const pageRes = await callApi(`/api/admin/pages/${slug}`, { auth: true });
       const pageData = await pageRes.json();
       setPage(pageData);
 
-      const contentRes = await fetch(`/api/admin/pages/${slug}/content`);
+      // set default activeSection to first section if not already set
+      if (pageData.sections && pageData.sections.length > 0) {
+        setActiveSection((prev) => prev || pageData.sections[0].apiIdentifier);
+      }
+
+      const contentRes = await callApi(`/api/admin/pages/${slug}/content`, { auth: true });
       const contentData = await contentRes.json();
       setContent(contentData);
 
@@ -55,20 +61,16 @@ export default function PageContentPage() {
     loadData();
   }, [slug]);
 
-  const getContentForSection = (sectionIndex, itemIndex = 0) => {
-    return content.find(
-      (c) => c.sectionIndex === sectionIndex && c.itemIndex === itemIndex
-    );
-  };
+
 
   const togglePublishStatus = async () => {
     try {
       setSaving(true);
       const newStatus = !page.isPublished;
-      const res = await fetch(`/api/admin/pages/${slug}`, {
+      const res = await callApi(`/api/admin/pages/${slug}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        auth: true,
+        body: {
           title: page.title,
           description: page.description,
           sections: page.sections.map((section) => ({
@@ -87,7 +89,7 @@ export default function PageContentPage() {
             dataInstances: section.dataInstances || [],
           })),
           isPublished: newStatus,
-        }),
+        },
       });
 
       if (res.ok) {
@@ -111,26 +113,33 @@ export default function PageContentPage() {
     }
   };
 
-  const saveContent = async (sectionIndex, itemIndex = 0, values) => {
+  const saveContent = async (sectionApiId, itemIndex = 0, values, originalItemIndex) => {
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/pages/${slug}/content`, {
+      const payload = {
+        sectionApiId,
+        itemIndex,
+        values,
+      };
+      if (originalItemIndex !== undefined) payload.originalItemIndex = originalItemIndex;
+
+      const res = await callApi(`/api/admin/pages/${slug}/content`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sectionIndex,
-          itemIndex,
-          values,
-        }),
+        auth: true,
+        body: payload,
       });
 
       if (res.ok) {
         const savedContent = await res.json();
         setContent((prev) => {
-          const filtered = prev.filter(
-            (c) =>
-              !(c.sectionIndex === sectionIndex && c.itemIndex === itemIndex)
-          );
+          const filtered = prev.filter((c) => {
+            // remove old entry either by original index or current one
+            const matchSection = c.sectionApiId === sectionApiId;
+            const matchIndex = originalItemIndex !== undefined
+              ? c.itemIndex === originalItemIndex
+              : c.itemIndex === itemIndex;
+            return !(matchSection && matchIndex);
+          });
           return [...filtered, savedContent];
         });
         setToast({ message: "Content saved successfully", type: "success" });
@@ -145,21 +154,21 @@ export default function PageContentPage() {
     }
   };
 
-  const deleteContent = async (sectionIndex, itemIndex = 0) => {
+  const deleteContent = async (sectionApiId, itemIndex = 0) => {
     if (!confirm("Delete this content?")) return;
 
     try {
-      const res = await fetch(`/api/admin/pages/${slug}/content`, {
+      const res = await callApi(`/api/admin/pages/${slug}/content`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sectionIndex, itemIndex }),
+        auth: true,
+        body: { sectionApiId, itemIndex },
       });
 
       if (res.ok) {
         setContent((prev) =>
           prev.filter(
             (c) =>
-              !(c.sectionIndex === sectionIndex && c.itemIndex === itemIndex)
+              !(c.sectionApiId === sectionApiId && c.itemIndex === itemIndex)
           )
         );
         setToast({ message: "Content deleted successfully", type: "success" });
@@ -215,7 +224,7 @@ export default function PageContentPage() {
           </Link>
           <div className="h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{page.title}</h1>
+            <h1 className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{page.title}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Content Editor</span>
               <span className="text-gray-300 dark:text-gray-700">•</span>
@@ -249,21 +258,21 @@ export default function PageContentPage() {
                   <Button
                     key={idx}
                     variant="ghost"
-                    onClick={() => setActiveSection(idx)}
-                    className={`px-4 py-4 text-left transition-all group flex items-center justify-between border-b border-gray-50 dark:border-gray-800 last:border-b-0 rounded-none h-auto ${activeSection === idx
+                    onClick={() => setActiveSection(section.apiIdentifier)}
+                    className={`px-4 py-4 text-left transition-all group flex items-center justify-between border-b border-gray-50 dark:border-gray-800 last:border-b-0 rounded-none h-auto ${activeSection === section.apiIdentifier
                       ? "bg-gray-100 dark:bg-gray-800 border-l-4 border-l-black dark:border-l-white pl-3"
                       : "hover:bg-gray-50 dark:hover:bg-gray-800/50 border-l-4 border-l-transparent"
                       }`}
                   >
                     <div>
-                      <p className={`text-sm font-bold ${activeSection === idx ? "text-black dark:text-white" : "text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white"}`}>
+                      <p className={`text-sm font-bold ${activeSection === section.apiIdentifier ? "text-black dark:text-white" : "text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white"}`}>
                         {section.title}
                       </p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-0.5 group-hover:text-gray-500 dark:group-hover:text-gray-400">
                         {section.fields.length} Fields
                       </p>
                     </div>
-                    {activeSection === idx && (
+                    {activeSection === section.apiIdentifier && (
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-black dark:text-white"><path d="m9 18 6-6-6-6" /></svg>
                     )}
                   </Button>
@@ -274,12 +283,12 @@ export default function PageContentPage() {
 
           {/* Editor Area */}
           <div className="lg:col-span-3">
-            {page.sections[activeSection] && (
+            {page.sections.find(s => s.apiIdentifier === activeSection) && (
               <SectionContentEditor
                 key={activeSection}
-                section={page.sections[activeSection]}
-                sectionIndex={activeSection}
-                content={content.filter((c) => c.sectionIndex === activeSection)}
+                section={page.sections.find(s => s.apiIdentifier === activeSection)}
+                sectionApiId={activeSection}
+                content={content.filter((c) => c.sectionApiId === activeSection)}
                 onSave={saveContent}
                 onDelete={deleteContent}
                 saving={saving}
@@ -306,7 +315,7 @@ export default function PageContentPage() {
 
 function SectionContentEditor({
   section,
-  sectionIndex,
+  sectionApiId,
   content,
   onSave,
   onDelete,
@@ -314,6 +323,7 @@ function SectionContentEditor({
   slug,
 }) {
   const [itemIndex, setItemIndex] = useState(0);
+  const [originalIndex, setOriginalIndex] = useState(0);
   const [formValues, setFormValues] = useState(() => {
     const firstItem = content.find(c => c.itemIndex === 0);
 
@@ -350,21 +360,19 @@ function SectionContentEditor({
   };
 
   const handleSave = () => {
-    onSave(sectionIndex, itemIndex, formValues);
+    onSave(sectionApiId, itemIndex, formValues, originalIndex);
   };
 
   const handleAddItem = () => {
-    const sectionContent = content.filter(
-      (c) => c.sectionIndex === sectionIndex
-    );
-
+    // filter content for this section is already done by parent
     const maxIndex = Math.max(
       -1,
-      ...sectionContent.map((c) => c.itemIndex)
+      ...content.map((c) => c.itemIndex)
     );
 
     const newIndex = maxIndex + 1;
     setItemIndex(newIndex);
+    setOriginalIndex(undefined); // mark as new content
 
     // Initialize empty form values for new item
     const initial = {};
@@ -425,35 +433,38 @@ function SectionContentEditor({
       {/* Items Tabs */}
       <div className="px-8 py-4 border-b border-gray-50 dark:border-gray-800 bg-gray-50/10 dark:bg-gray-800/20 flex justify-between items-center">
         <div className="flex flex-wrap gap-2">
-          {content.map((item) => (
-            <div key={item.itemIndex} className="group flex items-center relative">
-              <Button
-                onClick={() => {
-                  setItemIndex(item.itemIndex);
-                  const existing = content.find((c) => c.itemIndex === item.itemIndex);
-                  const nextValues = existing?.values || section.fields.reduce((acc, field) => {
-                    acc[field.name] = "";
-                    return acc;
-                  }, {});
-                  setFormValues(nextValues);
-                }}
-                className={`px-4 py-1.5 rounded-xl font-bold text-xs transition-all h-auto ${itemIndex === item.itemIndex
-                  ? "bg-black dark:bg-white text-white dark:text-black shadow-md"
-                  : "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}
-              >
-                Item {item.itemIndex + 1}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => { e.stopPropagation(); onDelete(sectionIndex, item.itemIndex); }}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity border-2 border-white dark:border-gray-900 shadow-sm p-0 hover:bg-red-600 hover:text-white"
-              >
-                ✕
-              </Button>
-            </div>
-          ))}
+          {content
+            .sort((a, b) => a.itemIndex - b.itemIndex)
+            .map((item) => (
+              <div key={item.itemIndex} className="group flex items-center relative">
+                <Button
+                  onClick={() => {
+                    setItemIndex(item.itemIndex);
+                    setOriginalIndex(item.itemIndex);
+                    const existing = content.find((c) => c.itemIndex === item.itemIndex);
+                    const nextValues = existing?.values || section.fields.reduce((acc, field) => {
+                      acc[field.name] = "";
+                      return acc;
+                    }, {});
+                    setFormValues(nextValues);
+                  }}
+                  className={`px-4 py-1.5 rounded-xl font-bold text-xs transition-all h-auto ${itemIndex === item.itemIndex
+                    ? "bg-black dark:bg-white text-white dark:text-black shadow-md"
+                    : "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}
+                >
+                  Item {item.itemIndex + 1}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => { e.stopPropagation(); onDelete(sectionApiId, item.itemIndex); }}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity border-2 border-white dark:border-gray-900 shadow-sm p-0 hover:bg-red-600 hover:text-white"
+                >
+                  ✕
+                </Button>
+              </div>
+            ))}
           {content.length > 0 && (
             <Button
               variant="outline"
@@ -470,6 +481,25 @@ function SectionContentEditor({
 
       {/* Form Fields */}
       <div className="p-8 space-y-8">
+        {/* Item Order Logic (Reordering) */}
+        <div className="max-w-xs space-y-2">
+          <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
+            Item Order / Sequence
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              type="number"
+              value={itemIndex}
+              onChange={(e) => setItemIndex(Number(e.target.value))}
+              className="w-24 px-5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-2xl focus:ring-4 focus:ring-black/5 dark:focus:ring-white/5 focus:border-black dark:focus:border-white transition-all text-sm font-semibold outline-none text-gray-800 dark:text-gray-200"
+              min="0"
+            />
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-tight leading-tight">
+              Change this number and press Save to reorder items.
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {section.fields.map((field) => (
             <FormField
@@ -685,8 +715,8 @@ function StatusConfirmationModal({ currentStatus, onConfirm, onCancel }) {
           <Button
             onClick={onConfirm}
             className={`w-full py-4 text-white rounded-2xl font-bold text-sm transition-all shadow-lg h-auto ${isPublished
-                ? "bg-amber-600 hover:bg-amber-700 shadow-amber-500/20"
-                : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20"
+              ? "bg-amber-600 hover:bg-amber-700 shadow-amber-500/20"
+              : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20"
               }`}
           >
             Yes, mark as {targetStatus}

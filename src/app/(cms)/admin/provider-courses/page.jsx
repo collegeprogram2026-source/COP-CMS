@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { callApi } from "@/lib/apiClient";
 import DegreeTypeSelect from "../components/DegreeTypeSelect";
 import CourseSelect from "../components/CourseSelect";
 import SpecializationSelect from "../components/SpecializationSelect";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 export default function ProviderCoursesPage() {
   const [providerCourses, setProviderCourses] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -51,13 +53,20 @@ export default function ProviderCoursesPage() {
   /* ---------------------------------- */
   const fetchProviderCourses = async () => {
     try {
-      const res = await fetch("/api/admin/provider-courses", {
+      const res = await callApi("/api/admin/provider-courses", {
         cache: "no-store",
+        auth: true,
       });
-      const data = await res.json();
-      setProviderCourses(data);
+      if (res.ok) {
+        const data = await res.json();
+        setProviderCourses(Array.isArray(data) ? data : []);
+      } else {
+        console.error("Failed to fetch provider courses:", await res.text());
+        setProviderCourses([]);
+      }
     } catch (err) {
       console.error("Error fetching provider courses", err);
+      setProviderCourses([]);
     }
   };
 
@@ -101,10 +110,10 @@ export default function ProviderCoursesPage() {
 
     console.log("Creating provider-course payload:", payload);
 
-    await fetch("/api/admin/provider-courses", {
+    await callApi("/api/admin/provider-courses", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      auth: true,
+      body: payload,
     });
 
     setFormData({
@@ -128,6 +137,7 @@ export default function ProviderCoursesPage() {
       isActive: true,
     });
 
+    setShowForm(false);
     setLoading(false);
     fetchProviderCourses();
   };
@@ -157,6 +167,7 @@ export default function ProviderCoursesPage() {
       brochureUrl: item.brochureUrl,
       isActive: item.isActive,
     });
+    setShowForm(false);
   };
 
   const handleUpdate = async (id) => {
@@ -186,10 +197,10 @@ export default function ProviderCoursesPage() {
 
     console.log("Updating provider-course id", id, "payload:", payload);
 
-    await fetch(`/api/admin/provider-courses/${id}`, {
+    await callApi(`/api/admin/provider-courses/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      auth: true,
+      body: payload,
     });
 
     setEditingId(null);
@@ -204,8 +215,9 @@ export default function ProviderCoursesPage() {
     const confirmDelete = confirm("Delete this provider course?");
     if (!confirmDelete) return;
 
-    await fetch(`/api/admin/provider-courses/${id}`, {
+    await callApi(`/api/admin/provider-courses/${id}`, {
       method: "DELETE",
+      auth: true,
     });
 
     fetchProviderCourses();
@@ -213,293 +225,339 @@ export default function ProviderCoursesPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-8 text-gray-800 dark:text-gray-200">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight">Provider Courses</h1>
-        <p className="text-muted-foreground">Manage course offerings and provider details</p>
+      <div className="flex justify-between items-center mb-10">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Provider Courses</h1>
+          <p className="text-muted-foreground mt-1">Manage course offerings and provider details</p>
+        </div>
+        {!editingId && (
+          <Button
+            onClick={() => {
+              setShowForm((v) => !v);
+              if (!showForm) {
+                setFormData({
+                  degreeTypeId: "",
+                  courseId: "",
+                  specializationId: "",
+                  providerId: "",
+                  title: "",
+                  slug: "",
+                  fees: "",
+                  discountedFees: "",
+                  feesBreakdown: [],
+                  duration: "",
+                  eligibility: "",
+                  seatsAvailable: "",
+                  brochureUrl: "",
+                  weeklyEffort: "",
+                  examPattern: "",
+                  employerAcceptance: "Medium",
+                  difficultyLevel: "Intermediate",
+                  isActive: true,
+                });
+              }
+            }}
+            className="px-6 py-3 bg-black text-white dark:bg-white dark:text-black text-sm font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 shadow-md hover:shadow-lg transition-all flex items-center gap-2 h-auto"
+          >
+            {showForm ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                Close
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                New Entry
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* ---------------------------------- */}
       {/* Create Form */}
       {/* ---------------------------------- */}
-      <div className="bg-card p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 mb-10">
-        <h2 className="text-lg font-semibold mb-6">Create New Provider Course</h2>
-        <form onSubmit={handleCreate} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {showForm && !editingId && (
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 mb-10">
+          <h2 className="text-lg font-semibold mb-6">Create New Provider Course</h2>
+          <form onSubmit={handleCreate} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            {/* Identity Group */}
-            <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/50 rounded-xl border border-gray-100 dark:border-white/10 dark:bg-white/5">
+              {/* Identity Group */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/50 rounded-xl border border-gray-100 dark:border-white/10 dark:bg-white/5">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Course Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Master of Business Administration"
+                    value={formData.title}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, title: value, slug: generateSlug(value) });
+                    }}
+                    className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Slug</label>
+                  <input
+                    type="text"
+                    placeholder="auto-generated-slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: generateSlug(e.target.value) })}
+                    className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-muted/50 text-muted-foreground dark:bg-white/5"
+                  />
+                </div>
+              </div>
+
+              {/* Classification Group */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Course Title</label>
+                <label className="text-sm font-semibold text-foreground">Degree Type</label>
+                <DegreeTypeSelect
+                  value={formData.degreeTypeId}
+                  onChange={(value) =>
+                    setFormData({ ...formData, degreeTypeId: value, courseId: "", specializationId: "" })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Course</label>
+                <CourseSelect
+                  degreeTypeId={formData.degreeTypeId}
+                  value={formData.courseId}
+                  onChange={(value) => setFormData({ ...formData, courseId: value, specializationId: "" })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Specialization</label>
+                <SpecializationSelect
+                  courseId={formData.courseId}
+                  value={formData.specializationId}
+                  onChange={(value) => setFormData({ ...formData, specializationId: value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Provider</label>
+                <ProviderSelect
+                  value={formData.providerId}
+                  onChange={(value) => setFormData({ ...formData, providerId: value })}
+                />
+              </div>
+
+              {/* Pricing Group */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Fees (₹)</label>
                 <input
-                  type="text"
-                  placeholder="e.g. Master of Business Administration"
-                  value={formData.title}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFormData({ ...formData, title: value, slug: generateSlug(value) });
-                  }}
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.fees}
+                  onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
                   className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Slug</label>
+                <label className="text-sm font-semibold text-foreground">Discounted Fees (₹)</label>
                 <input
-                  type="text"
-                  placeholder="auto-generated-slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: generateSlug(e.target.value) })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-muted/50 text-muted-foreground dark:bg-white/5"
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.discountedFees}
+                  onChange={(e) => setFormData({ ...formData, discountedFees: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
                 />
               </div>
-            </div>
 
-            {/* Classification Group */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Degree Type</label>
-              <DegreeTypeSelect
-                value={formData.degreeTypeId}
-                onChange={(value) =>
-                  setFormData({ ...formData, degreeTypeId: value, courseId: "", specializationId: "" })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Course</label>
-              <CourseSelect
-                degreeTypeId={formData.degreeTypeId}
-                value={formData.courseId}
-                onChange={(value) => setFormData({ ...formData, courseId: value, specializationId: "" })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Specialization</label>
-              <SpecializationSelect
-                courseId={formData.courseId}
-                value={formData.specializationId}
-                onChange={(value) => setFormData({ ...formData, specializationId: value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Provider</label>
-              <ProviderSelect
-                value={formData.providerId}
-                onChange={(value) => setFormData({ ...formData, providerId: value })}
-              />
-            </div>
-
-            {/* Pricing Group */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Fees (₹)</label>
-              <input
-                type="number"
-                placeholder="0.00"
-                value={formData.fees}
-                onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Discounted Fees (₹)</label>
-              <input
-                type="number"
-                placeholder="0.00"
-                value={formData.discountedFees}
-                onChange={(e) => setFormData({ ...formData, discountedFees: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-
-            {/* Seats & Eligibility */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Seats Available</label>
-              <input
-                type="number"
-                placeholder="e.g. 50"
-                value={formData.seatsAvailable}
-                onChange={(e) => setFormData({ ...formData, seatsAvailable: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Eligibility</label>
-              <input
-                type="text"
-                placeholder="e.g. Graduation with 50%"
-                value={formData.eligibility}
-                onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-
-            {/* Logistics Group */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Duration</label>
-              <input
-                type="text"
-                placeholder="e.g. 2 Years"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Weekly Effort (hrs)</label>
-              <input
-                type="number"
-                placeholder="e.g. 15"
-                value={formData.weeklyEffort}
-                onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Employer Acceptance</label>
-              <select
-                value={formData.employerAcceptance}
-                onChange={(e) => setFormData({ ...formData, employerAcceptance: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-card"
-              >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Difficulty Level</label>
-              <select
-                value={formData.difficultyLevel}
-                onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-card"
-              >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </select>
-            </div>
-
-            {/* Resources Group */}
-            <div className="lg:col-span-2 space-y-2">
-              <label className="text-sm font-semibold text-foreground">Brochure URL</label>
-              <input
-                type="text"
-                placeholder="https://example.com/brochure.pdf"
-                value={formData.brochureUrl}
-                onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-              />
-            </div>
-            <div className="lg:col-span-2 space-y-2">
-              <label className="text-sm font-semibold text-foreground">Exam Pattern</label>
-              <textarea
-                placeholder="Describe the assessment method"
-                value={formData.examPattern}
-                onChange={(e) => setFormData({ ...formData, examPattern: e.target.value })}
-                className="w-full border border-border/50 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none min-h-[46px] resize-none bg-card"
-              />
-            </div>
-
-            {/* Fees Breakdown - Full Width Area */}
-            <div className="col-span-1 md:col-span-2 lg:col-span-4 p-6 bg-muted/50 rounded-xl border border-gray-100 dark:border-white/10 dark:bg-white/5 space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-semibold text-foreground uppercase tracking-wider">Fees Breakdown</label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setFormData({
-                      ...formData,
-                      feesBreakdown: [...formData.feesBreakdown, { label: "", amount: 0 }],
-                    })
-                  }
-                  className="px-4 py-1.5 text-xs font-bold bg-card border border-border/50 rounded-lg hover:bg-muted/50 transition-colors shadow-sm flex items-center gap-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
-                  Add Item
-                </Button>
+              {/* Seats & Eligibility */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Seats Available</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 50"
+                  value={formData.seatsAvailable}
+                  onChange={(e) => setFormData({ ...formData, seatsAvailable: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Eligibility</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Graduation with 50%"
+                  value={formData.eligibility}
+                  onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {formData.feesBreakdown.map((fb, idx) => (
-                  <div key={idx} className="flex gap-2 items-center bg-card p-2 rounded-lg border border-border/50 shadow-sm transition-all hover:border-border">
-                    <input
-                      type="text"
-                      placeholder="Label (e.g. Admission)"
-                      value={fb.label}
-                      onChange={(e) => {
-                        const arr = [...formData.feesBreakdown];
-                        arr[idx].label = e.target.value;
-                        setFormData({ ...formData, feesBreakdown: arr });
-                      }}
-                      className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none"
-                    />
-                    <div className="flex items-center gap-1 border-l pl-2">
-                      <span className="text-muted-foreground text-xs font-bold">₹</span>
+              {/* Logistics Group */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Duration</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 2 Years"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Weekly Effort (hrs)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 15"
+                  value={formData.weeklyEffort}
+                  onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Employer Acceptance</label>
+                <select
+                  value={formData.employerAcceptance}
+                  onChange={(e) => setFormData({ ...formData, employerAcceptance: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-card"
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Difficulty Level</label>
+                <select
+                  value={formData.difficultyLevel}
+                  onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-card"
+                >
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
+
+              {/* Resources Group */}
+              <div className="lg:col-span-2 space-y-2">
+                <label className="text-sm font-semibold text-foreground">Brochure URL</label>
+                <input
+                  type="text"
+                  placeholder="https://example.com/brochure.pdf"
+                  value={formData.brochureUrl}
+                  onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                />
+              </div>
+              <div className="lg:col-span-2 space-y-2">
+                <label className="text-sm font-semibold text-foreground">Exam Pattern</label>
+                <textarea
+                  placeholder="Describe the assessment method"
+                  value={formData.examPattern}
+                  onChange={(e) => setFormData({ ...formData, examPattern: e.target.value })}
+                  className="w-full border border-border/50 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none min-h-[46px] resize-none bg-card"
+                />
+              </div>
+
+              {/* Fees Breakdown - Full Width Area */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-6 bg-muted/50 rounded-xl border border-gray-100 dark:border-white/10 dark:bg-white/5 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-foreground uppercase tracking-wider">Fees Breakdown</label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        feesBreakdown: [...formData.feesBreakdown, { label: "", amount: 0 }],
+                      })
+                    }
+                    className="px-4 py-1.5 text-xs font-bold bg-card border border-border/50 rounded-lg hover:bg-muted/50 transition-colors shadow-sm flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add Item
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formData.feesBreakdown.map((fb, idx) => (
+                    <div key={idx} className="flex gap-2 items-center bg-card p-2 rounded-lg border border-border/50 shadow-sm transition-all hover:border-border">
                       <input
-                        type="number"
-                        placeholder="0"
-                        value={fb.amount}
+                        type="text"
+                        placeholder="Label (e.g. Admission)"
+                        value={fb.label}
                         onChange={(e) => {
                           const arr = [...formData.feesBreakdown];
-                          arr[idx].amount = e.target.value;
+                          arr[idx].label = e.target.value;
                           setFormData({ ...formData, feesBreakdown: arr });
                         }}
-                        className="border-none focus:ring-0 px-2 py-1 text-sm w-20 outline-none"
+                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none"
                       />
+                      <div className="flex items-center gap-1 border-l pl-2">
+                        <span className="text-muted-foreground text-xs font-bold">₹</span>
+                        <input
+                          type="number"
+                          placeholder="0"
+                          value={fb.amount}
+                          onChange={(e) => {
+                            const arr = [...formData.feesBreakdown];
+                            arr[idx].amount = e.target.value;
+                            setFormData({ ...formData, feesBreakdown: arr });
+                          }}
+                          className="border-none focus:ring-0 px-2 py-1 text-sm w-20 outline-none"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const arr = formData.feesBreakdown.filter((_, i) => i !== idx);
+                          setFormData({ ...formData, feesBreakdown: arr });
+                        }}
+                        className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </Button>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const arr = formData.feesBreakdown.filter((_, i) => i !== idx);
-                        setFormData({ ...formData, feesBreakdown: arr });
-                      }}
-                      className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              {formData.feesBreakdown.length === 0 && (
-                <div className="text-center py-4 text-xs text-muted-foreground italic">No breakdown items added</div>
-              )}
-            </div>
-
-            {/* Status Toggle & Submit */}
-            <div className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-gray-100 dark:border-white/10">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="peer sr-only"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black dark:peer-checked:bg-white"></div>
+                  ))}
                 </div>
-                <span className="text-sm font-semibold text-foreground group-hover:text-black dark:group-hover:text-white transition-colors">Course is Active</span>
-              </label>
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full md:w-auto px-10 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Saving...
-                  </>
-                ) : (
-                  "Add Provider Course"
+                {formData.feesBreakdown.length === 0 && (
+                  <div className="text-center py-4 text-xs text-muted-foreground italic">No breakdown items added</div>
                 )}
-              </Button>
+              </div>
+
+              {/* Status Toggle & Submit */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-gray-100 dark:border-white/10">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      className="peer sr-only"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black dark:peer-checked:bg-white"></div>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground group-hover:text-black dark:group-hover:text-white transition-colors">Course is Active</span>
+                </label>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full md:w-auto px-10 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    "Add Provider Course"
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
 
       {/* ---------------------------------- */}
       {/* Table */}

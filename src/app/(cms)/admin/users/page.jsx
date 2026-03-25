@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/apiClient";
 
 const SECTION_NAMES = {
   leads: "Leads",
@@ -73,8 +74,9 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await callApi("/api/admin/users", {
         cache: "no-store",
+        auth: true,
       });
 
       const data = await res.json();
@@ -98,8 +100,9 @@ export default function UsersPage() {
       params.append("limit", itemsPerPage);
       params.append("skip", (currentPage - 1) * itemsPerPage);
 
-      const res = await fetch(`/api/admin/activities?${params.toString()}`, {
+      const res = await callApi(`/api/admin/activities?${params.toString()}`, {
         cache: "no-store",
+        auth: true,
       });
 
       const data = await res.json();
@@ -148,8 +151,9 @@ export default function UsersPage() {
     setDeleteLoading(true);
 
     try {
-      const res = await fetch(`/api/admin/users/${deleteUserData.userId}`, {
+      const res = await callApi(`/api/admin/users/${deleteUserData.userId}`, {
         method: "DELETE",
+        auth: true,
       });
 
       const data = await res.json();
@@ -199,13 +203,13 @@ export default function UsersPage() {
       : updateAccessList;
 
     try {
-      const res = await fetch(`/api/admin/users/${updateAccessUser.userId}`, {
+      const res = await callApi(`/api/admin/users/${updateAccessUser.userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        auth: true,
+        body: {
           access: accessToSend,
           role: updateAccessLevel === "admin" ? "admin" : "viewer",
-        }),
+        },
       });
 
       const data = await res.json();
@@ -271,14 +275,13 @@ export default function UsersPage() {
     setInviteLoading(true);
 
     try {
-      const res = await fetch("/api/auth/send-invite", {
+      const res = await callApi("/api/auth/send-invite", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           email: inviteEmail,
           access: accessToSend,
           role: inviteAccessLevel === "admin" ? "admin" : "viewer",
-        }),
+        },
       });
 
       const data = await res.json();

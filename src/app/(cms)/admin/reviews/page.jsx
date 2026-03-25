@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { callApi } from "@/lib/apiClient"
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState([])
@@ -31,7 +32,7 @@ export default function ReviewsPage() {
 
     // Filter by provider
     if (selectedProvider) {
-      filtered = filtered.filter((r) => r.providerId._id === selectedProvider)
+      filtered = filtered.filter((r) => r.providerId?._id === selectedProvider)
     }
 
     setFilteredReviews(filtered)
@@ -40,7 +41,7 @@ export default function ReviewsPage() {
   const fetchReviews = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/admin/reviews")
+      const res = await callApi("/api/admin/reviews", { auth: true })
       if (!res.ok) throw new Error("Failed to fetch reviews")
       const data = await res.json()
       setReviews(data)
@@ -53,7 +54,7 @@ export default function ReviewsPage() {
 
   const fetchProviders = async () => {
     try {
-      const res = await fetch("/api/admin/providers")
+      const res = await callApi("/api/admin/providers", { auth: true })
       if (!res.ok) throw new Error("Failed to fetch providers")
       const data = await res.json()
       setProviders(data)
@@ -64,12 +65,12 @@ export default function ReviewsPage() {
 
   const toggleReviewStatus = async (id, currentStatus) => {
     try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
+      const res = await callApi(`/api/admin/reviews/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !currentStatus }),
+        auth: true,
+        body: { isActive: !currentStatus },
       })
-      if (!res.ok) throw new Error("Failed to update review")
+      if (!res.ok) throw new Error("Failed to update status")
       fetchReviews()
     } catch (err) {
       setError(err.message)
@@ -79,8 +80,9 @@ export default function ReviewsPage() {
   const deleteReview = async (id) => {
     if (!confirm("Are you sure you want to delete this review?")) return
     try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
+      const res = await callApi(`/api/admin/reviews/${id}`, {
         method: "DELETE",
+        auth: true,
       })
       if (!res.ok) throw new Error("Failed to delete review")
       fetchReviews()

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { callApi } from "@/lib/apiClient";
 import CourseSelect from "../components/CourseSelect";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 export default function SpecializationsPage() {
   const [specializations, setSpecializations] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -34,11 +36,18 @@ export default function SpecializationsPage() {
   /* ---------------------------------- */
   const fetchSpecializations = async () => {
     try {
-      const res = await fetch("/api/admin/specialization", {
+      const res = await callApi("/api/admin/specializations", {
         cache: "no-store",
+        auth: true,
       });
-      const data = await res.json();
-      setSpecializations(Array.isArray(data) ? data : []);
+
+      if (res.ok) {
+        const data = await res.json();
+        setSpecializations(Array.isArray(data) ? data : []);
+      } else {
+        console.error("Failed to fetch specializations:", await res.text());
+        setSpecializations([]);
+      }
     } catch (err) {
       console.error("Error fetching specializations", err);
       setSpecializations([]);
@@ -71,10 +80,10 @@ export default function SpecializationsPage() {
 
     setLoading(true);
 
-    await fetch("/api/admin/specialization", {
+    await callApi("/api/admin/specializations", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      auth: true,
+      body: formData,
     });
 
     setFormData({
@@ -84,6 +93,7 @@ export default function SpecializationsPage() {
       isActive: true,
     });
 
+    setShowForm(false);
     setLoading(false);
     fetchSpecializations();
   };
@@ -99,6 +109,7 @@ export default function SpecializationsPage() {
       courseId: spec.courseId?._id || spec.courseId,
       isActive: spec.isActive,
     });
+    setShowForm(false);
   };
 
   const handleUpdate = async (id) => {
@@ -114,10 +125,10 @@ export default function SpecializationsPage() {
 
     setLoading(true);
 
-    await fetch(`/api/admin/specialization/${id}`, {
+    await callApi(`/api/admin/specializations/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      auth: true,
+      body: formData,
     });
 
     setEditingId(null);
@@ -132,8 +143,9 @@ export default function SpecializationsPage() {
     const confirmDelete = confirm("Delete this specialization?");
     if (!confirmDelete) return;
 
-    await fetch(`/api/admin/specialization/${id}`, {
+    await callApi(`/api/admin/specializations/${id}`, {
       method: "DELETE",
+      auth: true,
     });
 
     fetchSpecializations();
@@ -141,103 +153,140 @@ export default function SpecializationsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-8 text-foreground">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight">Specializations</h1>
-        <p className="text-muted-foreground">Manage specialized paths for your courses</p>
+      <div className="flex justify-between items-center mb-10">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Specializations</h1>
+          <p className="text-muted-foreground mt-1">Manage specialized paths for your courses</p>
+        </div>
+        {!editingId && (
+          <Button
+            onClick={() => {
+              setShowForm((v) => !v);
+              if (!showForm) {
+                setFormData({
+                  name: "",
+                  slug: "",
+                  courseId: "",
+                  isActive: true,
+                });
+              }
+            }}
+            className="px-6 py-3 bg-primary text-primary-foreground text-sm font-bold rounded-xl hover:bg-primary/90 shadow-md hover:shadow-lg transition-all flex items-center gap-2 h-auto"
+          >
+            {showForm ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                Close
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                New Specialization
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* ---------------------------------- */}
       {/* Create Form */}
       {/* ---------------------------------- */}
-      <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 mb-10">
-        <h2 className="text-lg font-semibold mb-6">Create New Specialization</h2>
-        <form onSubmit={handleCreate} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Name</label>
-              <input
-                type="text"
-                placeholder="e.g. Artificial Intelligence"
-                value={formData.name}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData({
-                    ...formData,
-                    name: value,
-                    slug: generateSlug(value),
-                  });
-                }}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-background"
-              />
-            </div>
+      {showForm && !editingId && (
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 mb-10">
+          <h2 className="text-lg font-semibold mb-6">Create New Specialization</h2>
+          <form onSubmit={handleCreate} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Artificial Intelligence"
+                  value={formData.name}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({
+                      ...formData,
+                      name: value,
+                      slug: generateSlug(value),
+                    });
+                  }}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-background"
+                />
+              </div>
 
-            {/* Slug */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Slug</label>
-              <input
-                type="text"
-                placeholder="auto-generated-slug"
-                value={formData.slug}
-                readOnly
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg bg-muted text-muted-foreground cursor-not-allowed outline-none"
-              />
-            </div>
+              {/* Slug */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Slug</label>
+                <input
+                  type="text"
+                  placeholder="e.g. artificial-intelligence"
+                  value={formData.slug}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      slug: generateSlug(e.target.value),
+                    })
+                  }
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-background text-foreground"
+                />
+              </div>
 
-            {/* Course Dropdown */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Course</label>
-              <CourseSelect
-                value={formData.courseId}
-                onChange={(value) =>
-                  setFormData({ ...formData, courseId: value })
-                }
-                required
-              />
-            </div>
+              {/* Course Dropdown */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Course</label>
+                <CourseSelect
+                  value={formData.courseId}
+                  onChange={(value) =>
+                    setFormData({ ...formData, courseId: value })
+                  }
+                  required
+                />
+              </div>
 
-            {/* Status & Submit */}
-            <div className="flex items-end gap-6">
-              <div className="flex-1 flex items-center h-[46px]">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          isActive: e.target.checked,
-                        })
-                      }
-                      className="peer sr-only"
-                    />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </div>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Active</span>
-                </label>
+              {/* Status & Submit */}
+              <div className="flex items-end gap-6">
+                <div className="flex-1 flex items-center h-[46px]">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isActive: e.target.checked,
+                          })
+                        }
+                        className="peer sr-only"
+                      />
+                      <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </div>
+                    <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Active</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end pt-4 border-t border-border/50">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="px-8 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center gap-2 h-auto"
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  Creating...
-                </>
-              ) : (
-                "Add Specialization"
-              )}
-            </Button>
-          </div>
-        </form>
-      </div>
+            <div className="flex justify-end pt-4 border-t border-border/50">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="px-8 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center gap-2 h-auto"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Creating...
+                  </>
+                ) : (
+                  "Add Specialization"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* ---------------------------------- */}
       {/* Table */}
@@ -286,8 +335,13 @@ export default function SpecializationsPage() {
                     {editingId === spec._id ? (
                       <input
                         value={formData.slug}
-                        readOnly
-                        className="w-full border border-border/50 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground outline-none"
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            slug: generateSlug(e.target.value),
+                          })
+                        }
+                        className="w-full border border-border/50 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-background text-foreground"
                       />
                     ) : (
                       <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground font-mono">{spec.slug}</code>

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
+import { CreatePageDialog } from "@/components/cms/CreatePageDialog";
 
 export default function PagesListPage() {
   const [pages, setPages] = useState([]);
@@ -77,12 +77,7 @@ export default function PagesListPage() {
               Create and manage custom pages with dynamic sections
             </p>
           </div>
-          <Button
-            asChild
-            className="inline-flex items-center px-5 py-2.5 bg-primary text-primary-foreground text-sm font-bold rounded-xl hover:opacity-90 transition-all shadow-sm hover:shadow-md active:scale-[0.98] h-auto"
-          >
-            <Link href="/admin/pages/new">+ Create Page</Link>
-          </Button>
+          <CreatePageDialog onSuccess={fetchPages} />
         </div>
 
         {/* Pages Table */}
@@ -93,12 +88,11 @@ export default function PagesListPage() {
                 <span className="text-2xl">📄</span>
               </div>
               <p className="text-muted-foreground font-medium mb-4">No pages yet</p>
-              <Link
-                href="/admin/pages/new"
-                className="text-sm font-bold text-foreground hover:underline"
-              >
-                Create your first page
-              </Link>
+              <CreatePageDialog onSuccess={fetchPages}>
+                <button className="text-sm font-bold text-foreground hover:underline">
+                  Create your first page
+                </button>
+              </CreatePageDialog>
             </div>
           ) : (
             <div className="overflow-x-auto">

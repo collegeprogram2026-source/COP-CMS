@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/apiClient";
 
 export default function DegreeTypesPage() {
   const [degreeTypes, setDegreeTypes] = useState([]);
@@ -10,6 +11,7 @@ export default function DegreeTypesPage() {
   const [toast, setToast] = useState(null);
 
   const [editingId, setEditingId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -34,14 +36,21 @@ export default function DegreeTypesPage() {
   /* ---------------------------------- */
   const fetchDegreeTypes = async () => {
     try {
-      const res = await fetch("/api/admin/degree-types", {
+      const res = await callApi("/api/admin/degree-types", {
         cache: "no-store",
+        auth: true,
       });
 
-      const data = await res.json();
-      setDegreeTypes(data);
+      if (res.ok) {
+        const data = await res.json();
+        setDegreeTypes(Array.isArray(data) ? data : []);
+      } else {
+        console.error("Failed to fetch degree types:", await res.text());
+        setDegreeTypes([]);
+      }
     } catch (err) {
       console.error("Error fetching degree types", err);
+      setDegreeTypes([]);
     }
   };
 
@@ -66,10 +75,10 @@ export default function DegreeTypesPage() {
 
     setLoading(true);
 
-    await fetch("/api/admin/degree-types", {
+    await callApi("/api/admin/degree-types", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      auth: true,
+      body: formData,
     });
 
     setFormData({
@@ -79,6 +88,7 @@ export default function DegreeTypesPage() {
       isActive: true,
     });
 
+    setShowForm(false);
     setLoading(false);
     fetchDegreeTypes();
   };
@@ -94,6 +104,7 @@ export default function DegreeTypesPage() {
       order: degree.order,
       isActive: degree.isActive,
     });
+    setShowForm(false);
   };
 
   const handleUpdate = async (id) => {
@@ -104,10 +115,10 @@ export default function DegreeTypesPage() {
 
     setLoading(true);
 
-    await fetch(`/api/admin/degree-types/${id}`, {
+    await callApi(`/api/admin/degree-types/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      auth: true,
+      body: formData,
     });
 
     setEditingId(null);
@@ -124,8 +135,9 @@ export default function DegreeTypesPage() {
     );
     if (!confirmDelete) return;
 
-    await fetch(`/api/admin/degree-types/${id}`, {
+    await callApi(`/api/admin/degree-types/${id}`, {
       method: "DELETE",
+      auth: true,
     });
 
     fetchDegreeTypes();
@@ -133,118 +145,145 @@ export default function DegreeTypesPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-8 text-foreground">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight">Degree Types</h1>
-        <p className="text-muted-foreground">Manage your degree types</p>
+      <div className="flex justify-between items-center mb-10">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Degree Types</h1>
+          <p className="text-muted-foreground mt-1">Manage your degree types</p>
+        </div>
+        {!editingId && (
+          <Button
+            onClick={() => {
+              setShowForm((v) => !v);
+              if (!showForm) {
+                setFormData({ name: "", slug: "", order: 0, isActive: true });
+              }
+            }}
+            className="px-6 py-3 bg-primary text-primary-foreground text-sm font-bold rounded-xl hover:bg-primary/90 shadow-md hover:shadow-lg transition-all flex items-center gap-2 h-auto"
+          >
+            {showForm ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                Close
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                New Degree Type
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* ---------------------------------- */}
       {/* Create Form */}
       {/* ---------------------------------- */}
-      <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 mb-10">
-        <h2 className="text-lg font-semibold mb-6">Create New Degree Type</h2>
-        <form onSubmit={handleCreate} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {showForm && !editingId && (
+        <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 mb-10">
+          <h2 className="text-lg font-semibold mb-6">Create New Degree Type</h2>
+          <form onSubmit={handleCreate} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            {/* Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Degree Type Name</label>
-              <input
-                type="text"
-                placeholder="Enter degree type name"
-                value={formData.name}
-                onChange={(e) => {
-                  const nameValue = e.target.value;
+              {/* Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Degree Type Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter degree type name"
+                  value={formData.name}
+                  onChange={(e) => {
+                    const nameValue = e.target.value;
 
-                  setFormData({
-                    ...formData,
-                    name: nameValue,
-                    slug: generateSlug(nameValue),
-                  });
-                }}
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-
-            {/* Slug */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Slug</label>
-              <input
-                type="text"
-                placeholder="slug"
-                value={formData.slug}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    slug: generateSlug(e.target.value),
-                  })
-                }
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-
-            {/* Order */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Order</label>
-              <input
-                type="number"
-                value={formData.order}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    order: Number(e.target.value),
-                  })
-                }
-                className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-
-            {/* Active Toggle */}
-            <div className="flex items-end gap-6">
-              <div className="flex-1 flex items-center h-[46px]">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          isActive: e.target.checked,
-                        })
-                      }
-                      className="peer sr-only"
-                    />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </div>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Active</span>
-                </label>
+                    setFormData({
+                      ...formData,
+                      name: nameValue,
+                      slug: generateSlug(nameValue),
+                    });
+                  }}
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                />
               </div>
+
+              {/* Slug */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Slug</label>
+                <input
+                  type="text"
+                  placeholder="slug"
+                  value={formData.slug}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      slug: generateSlug(e.target.value),
+                    })
+                  }
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                />
+              </div>
+
+              {/* Order */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">Order</label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      order: Number(e.target.value),
+                    })
+                  }
+                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                />
+              </div>
+
+              {/* Active Toggle */}
+              <div className="flex items-end gap-6">
+                <div className="flex-1 flex items-center h-[46px]">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isActive: e.target.checked,
+                          })
+                        }
+                        className="peer sr-only"
+                      />
+                      <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </div>
+                    <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Active</span>
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-          </div>
-
-          <div className="flex justify-end pt-4 border-t border-border/50">
-            <Button
-              type="submit"
-              disabled={!formData.name.trim() || loading}
-              className={`px-8 py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-auto ${formData.name.trim() && !loading
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-                }`}
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  Creating...
-                </>
-              ) : (
-                "Add Degree Type"
-              )}
-            </Button>
-          </div>
-        </form>
-      </div>
+            <div className="flex justify-end pt-4 border-t border-border/50">
+              <Button
+                type="submit"
+                disabled={!formData.name.trim() || loading}
+                className={`px-8 py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-auto ${formData.name.trim() && !loading
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Creating...
+                  </>
+                ) : (
+                  "Add Degree Type"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* ---------------------------------- */}
       {/* Table */}

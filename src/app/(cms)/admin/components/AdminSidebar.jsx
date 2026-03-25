@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -46,7 +45,7 @@ const sidebarItems = [
     section: "courses",
     children: [
       { name: "Degree Type", path: "/admin/degree-types", section: "degree-types" },
-      { name: "All Courses", path: "/admin/courses", section: "courses" },
+      { name: "Courses", path: "/admin/courses", section: "courses" },
       { name: "Specialization", path: "/admin/specializations", section: "specializations" },
       { name: "Providers", path: "/admin/providers", section: "providers" },
       { name: "Provider Courses", path: "/admin/provider-courses", section: "provider-courses" },
@@ -372,8 +371,8 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
               onClick={() => setTheme("light")}
               className={`
                 flex-1 flex items-center justify-center py-2 rounded-lg transition-all
-                ${mounted && theme === "light" 
-                  ? "bg-background shadow-sm text-foreground" 
+                ${mounted && theme === "light"
+                  ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }
               `}
@@ -386,8 +385,8 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
               onClick={() => setTheme("dark")}
               className={`
                 flex-1 flex items-center justify-center py-2 rounded-lg transition-all
-                ${mounted && theme === "dark" 
-                  ? "bg-background shadow-sm text-foreground" 
+                ${mounted && theme === "dark"
+                  ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }
               `}
@@ -400,8 +399,8 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
               onClick={() => setTheme("system")}
               className={`
                 flex-1 flex items-center justify-center py-2 rounded-lg transition-all
-                ${mounted && theme === "system" 
-                  ? "bg-background shadow-sm text-foreground" 
+                ${mounted && theme === "system"
+                  ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }
               `}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/apiClient";
 
 const CALL_STATUS_OPTIONS = [
   { value: "pending", label: "Pending", color: "bg-muted" },
@@ -34,7 +35,7 @@ export default function LeadsPage() {
       if (filterStatus) {
         url += `?status=${filterStatus}`;
       }
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await callApi(url, { cache: "no-store", auth: true });
       const data = await res.json();
 
       if (!res.ok) {
@@ -94,10 +95,10 @@ export default function LeadsPage() {
 
     console.log("Updating lead id", id, "payload:", payload);
 
-    await fetch(`/api/admin/leads/${id}`, {
+    await callApi(`/api/admin/leads/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      auth: true,
+      body: payload,
     });
 
     setEditingId(null);
@@ -112,8 +113,9 @@ export default function LeadsPage() {
     const confirmDelete = confirm("Delete this lead?");
     if (!confirmDelete) return;
 
-    await fetch(`/api/admin/leads/${id}`, {
+    await callApi(`/api/admin/leads/${id}`, {
       method: "DELETE",
+      auth: true,
     });
 
     fetchLeads();

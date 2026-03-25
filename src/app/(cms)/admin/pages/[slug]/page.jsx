@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/apiClient";
 
 const FIELD_TYPES = [
   "text",
@@ -135,7 +136,9 @@ export default function EditPagePage({ params: paramsPromise }) {
 
   const fetchPage = async () => {
     try {
-      const res = await fetch(`/api/admin/pages/${params.slug}`);
+      const res = await callApi(`/api/admin/pages/${params.slug}`, {
+        auth: true,
+      });
       if (res.ok) {
         const data = await res.json();
 
@@ -244,10 +247,10 @@ export default function EditPagePage({ params: paramsPromise }) {
     setError("");
 
     try {
-      const res = await fetch(`/api/admin/pages/${page.slug}`, {
+      const res = await callApi(`/api/admin/pages/${page.slug}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        auth: true,
+        body: {
           title: page.title,
           description: page.description,
           sections: page.sections.map((section) => ({
@@ -265,7 +268,7 @@ export default function EditPagePage({ params: paramsPromise }) {
             dataInstances: section.dataInstances || [],
           })),
           isPublished: page.isPublished,
-        }),
+        },
       });
 
       if (res.ok) {
@@ -340,7 +343,7 @@ export default function EditPagePage({ params: paramsPromise }) {
           </Button>
           <div className="h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{page.title}</h1>
+            <h1 className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{page.title}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Model Editor</span>
               <span className="text-gray-300 dark:text-gray-700">•</span>
@@ -359,14 +362,6 @@ export default function EditPagePage({ params: paramsPromise }) {
             >
               <span className={`w-2 h-2 rounded-full ${page.isPublished ? "bg-emerald-500 animate-pulse" : "bg-emerald-500"}`} />
               {page.isPublished ? "Published" : "Draft"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigateGuarded(`/admin/pages/${page.slug}/content`)}
-              className="px-6 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold transition-all shadow-sm flex items-center gap-2 h-auto"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>
-              Content
             </Button>
             <Button
               onClick={handleSave}
@@ -396,16 +391,22 @@ export default function EditPagePage({ params: paramsPromise }) {
           </div>
         )}
 
-        {/* Action Controls */}
-        <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Define sections and input fields for this page</p>
+        {/* Action Controls - Even Smaller Premium Buttons */}
+        <div className="flex flex-wrap items-center gap-3 px-1">
+          <Button
+            onClick={() => navigateGuarded(`/admin/pages/${page.slug}/content`)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>
+            Manage Content
+          </Button>
+
           <Button
             onClick={() => setShowCreateModal(true)}
-            size="lg"
-            className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 dark:hover:bg-blue-500 font-bold transition-all shadow-sm h-auto"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
-            New Content Model
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18" /></svg>
+            Content Model
           </Button>
         </div>
 
@@ -465,17 +466,26 @@ export default function EditPagePage({ params: paramsPromise }) {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-2 items-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSectionToEdit(section._id);
+                              setShowFieldModal(true);
+                            }}
+                            className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all shadow-sm border border-blue-100/50 dark:border-blue-800/50"
+                          >
+                            Manage
+                          </button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={(e) => { e.stopPropagation(); handleDeleteSection(section._id); }}
-                            className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl h-auto p-2 self-center transition-all"
                             title="Delete Section"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
                           </Button>
-                          <div className="p-2 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase self-center">Manage</div>
                         </div>
                       </td>
                     </tr>
