@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
+import { callApi } from "@/lib/apiClient";
 
 const sidebarItems = [
   {
@@ -77,7 +78,7 @@ const sidebarItems = [
 export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollapsed, setIsCollapsed }) {
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [userAccess, setUserAccess] = useState([]);
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,20 +94,20 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
   const { user } = useUser();
 
   useEffect(() => {
-    const fetchUserAccess = async () => {
+    const fetchUserData = async () => {
       try {
-        const res = await fetch("/api/debug/user-info");
+        const res = await callApi("/api/admin/users/self", { auth: true });
         if (res.ok) {
           const data = await res.json();
-          setUserAccess(data.access || []);
+          setUserData(data);
         }
       } catch (err) {
-        console.error("Failed to fetch user access:", err);
+        console.error("Failed to fetch user data:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchUserAccess();
+    fetchUserData();
   }, []);
 
   const handleLogout = async () => {
@@ -126,8 +127,12 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
 
   const visibleItems = sidebarItems.filter((item) => {
     // 1. Access check
-    const hasAccess = item.section === null ||
-      (item.children ? item.children.some(child => userAccess.includes(child.section)) : userAccess.includes(item.section));
+    const hasAccess =
+      item.section === null ||
+      userData?.role === "admin" ||
+      (item.children
+        ? item.children.some((child) => (userData?.access || []).includes(child.section))
+        : (userData?.access || []).includes(item.section));
 
     if (!hasAccess) return false;
 
@@ -135,16 +140,24 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
     if (!searchQuery) return true;
 
     const nameMatches = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const childMatches = item.children && item.children.some(child =>
-      userAccess.includes(child.section) && child.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const childMatches =
+      item.children &&
+      item.children.some(
+        (child) =>
+          (userData?.role === "admin" || (userData?.access || []).includes(child.section)) &&
+          child.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
     return nameMatches || childMatches;
   });
 
   const getVisibleChildren = (children) => {
+    if (userData?.role === "admin") {
+      if (!searchQuery) return children;
+      return children.filter((child) => child.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
     return children.filter((child) => {
-      const access = userAccess.includes(child.section);
+      const access = (userData?.access || []).includes(child.section);
       if (!access) return false;
       if (!searchQuery) return true;
       return child.name.toLowerCase().includes(searchQuery.toLowerCase());
