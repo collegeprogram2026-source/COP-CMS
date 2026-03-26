@@ -37,114 +37,54 @@ export default function ProviderCoursesPage() {
     isActive: true,
   });
 
-  /* ---------------------------------- */
-  /* Slug Generator */
-  /* ---------------------------------- */
-  const generateSlug = (value) => {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]+/g, "");
-  };
+  const generateSlug = (value) =>
+    value.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
 
-  /* ---------------------------------- */
-  /* Fetch Provider Courses */
-  /* ---------------------------------- */
   const fetchProviderCourses = async () => {
     try {
-      const res = await callApi("/api/admin/provider-courses", {
-        cache: "no-store",
-        auth: true,
-      });
+      const res = await callApi("/api/admin/provider-courses", { cache: "no-store", auth: true });
       if (res.ok) {
         const data = await res.json();
         setProviderCourses(Array.isArray(data) ? data : []);
       } else {
-        console.error("Failed to fetch provider courses:", await res.text());
         setProviderCourses([]);
       }
     } catch (err) {
-      console.error("Error fetching provider courses", err);
       setProviderCourses([]);
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchProviderCourses();
-    };
+  useEffect(() => { fetchProviderCourses(); }, []);
 
-    loadData();
-  }, []);
+  const emptyForm = {
+    degreeTypeId: "", courseId: "", specializationId: "", providerId: "",
+    title: "", slug: "", fees: "", discountedFees: "", feesBreakdown: [],
+    duration: "", eligibility: "", seatsAvailable: "", brochureUrl: "",
+    weeklyEffort: "", examPattern: "", employerAcceptance: "Medium",
+    difficultyLevel: "Intermediate", isActive: true,
+  };
 
-  /* ---------------------------------- */
-  /* Create */
-  /* ---------------------------------- */
+  const buildPayload = (fd) => ({
+    ...fd,
+    fees: fd.fees ? Number(fd.fees) : 0,
+    discountedFees: fd.discountedFees ? Number(fd.discountedFees) : 0,
+    weeklyEffort: fd.weeklyEffort ? Number(fd.weeklyEffort) : undefined,
+    seatsAvailable: fd.seatsAvailable ? Number(fd.seatsAvailable) : undefined,
+    feesBreakdown: (fd.feesBreakdown || []).map((f) => ({ label: f.label, amount: f.amount ? Number(f.amount) : 0 })),
+  });
+
   const handleCreate = async (e) => {
     e.preventDefault();
-
-    if (!formData.title.trim()) {
-      setToast({ message: "Title is required!", type: "error" });
-      return;
-    }
-
-    if (!formData.courseId || !formData.degreeTypeId) {
-      setToast({ message: "Course & Degree Type are required!", type: "error" });
-      return;
-    }
-
+    if (!formData.title.trim()) return setToast({ message: "Title is required!", type: "error" });
+    if (!formData.courseId || !formData.degreeTypeId) return setToast({ message: "Course & Degree Type are required!", type: "error" });
     setLoading(true);
-
-    const payload = {
-      ...formData,
-      fees: formData.fees ? Number(formData.fees) : 0,
-      discountedFees: formData.discountedFees ? Number(formData.discountedFees) : 0,
-      weeklyEffort: formData.weeklyEffort ? Number(formData.weeklyEffort) : undefined,
-      seatsAvailable: formData.seatsAvailable ? Number(formData.seatsAvailable) : undefined,
-      feesBreakdown: (formData.feesBreakdown || []).map((f) => ({
-        label: f.label,
-        amount: f.amount ? Number(f.amount) : 0,
-      })),
-    };
-
-    console.log("Creating provider-course payload:", payload);
-
-    await callApi("/api/admin/provider-courses", {
-      method: "POST",
-      auth: true,
-      body: payload,
-    });
-
-    setFormData({
-      degreeTypeId: "",
-      courseId: "",
-      specializationId: "",
-      providerId: "",
-      title: "",
-      slug: "",
-      fees: "",
-      discountedFees: "",
-      feesBreakdown: [],
-      duration: "",
-      eligibility: "",
-      seatsAvailable: "",
-      brochureUrl: "",
-      weeklyEffort: "",
-      examPattern: "",
-      employerAcceptance: "Medium",
-      difficultyLevel: "Intermediate",
-      isActive: true,
-    });
-
+    await callApi("/api/admin/provider-courses", { method: "POST", auth: true, body: buildPayload(formData) });
+    setFormData(emptyForm);
     setShowForm(false);
     setLoading(false);
     fetchProviderCourses();
   };
 
-  /* ---------------------------------- */
-  /* Edit */
-  /* ---------------------------------- */
   const handleEdit = (item) => {
     setEditingId(item._id);
     setFormData({
@@ -157,116 +97,78 @@ export default function ProviderCoursesPage() {
       examPattern: item.examPattern || "",
       employerAcceptance: item.employerAcceptance || "Medium",
       difficultyLevel: item.difficultyLevel || "Intermediate",
-      title: item.title,
-      slug: item.slug,
-      fees: item.fees,
-      discountedFees: item.discountedFees,
-      duration: item.duration,
-      eligibility: item.eligibility,
-      seatsAvailable: item.seatsAvailable,
-      brochureUrl: item.brochureUrl,
-      isActive: item.isActive,
+      title: item.title, slug: item.slug, fees: item.fees,
+      discountedFees: item.discountedFees, duration: item.duration,
+      eligibility: item.eligibility, seatsAvailable: item.seatsAvailable,
+      brochureUrl: item.brochureUrl, isActive: item.isActive,
     });
     setShowForm(false);
   };
 
   const handleUpdate = async (id) => {
-    if (!formData.title.trim()) {
-      alert("Title is required!");
-      return;
-    }
-
-    if (!formData.courseId || !formData.degreeTypeId) {
-      alert("Course & Degree Type are required!");
-      return;
-    }
-
+    if (!formData.title.trim()) return alert("Title is required!");
+    if (!formData.courseId || !formData.degreeTypeId) return alert("Course & Degree Type are required!");
     setLoading(true);
-
-    const payload = {
-      ...formData,
-      fees: formData.fees ? Number(formData.fees) : 0,
-      discountedFees: formData.discountedFees ? Number(formData.discountedFees) : 0,
-      weeklyEffort: formData.weeklyEffort ? Number(formData.weeklyEffort) : undefined,
-      seatsAvailable: formData.seatsAvailable ? Number(formData.seatsAvailable) : undefined,
-      feesBreakdown: (formData.feesBreakdown || []).map((f) => ({
-        label: f.label,
-        amount: f.amount ? Number(f.amount) : 0,
-      })),
-    };
-
-    console.log("Updating provider-course id", id, "payload:", payload);
-
-    await callApi(`/api/admin/provider-courses/${id}`, {
-      method: "PUT",
-      auth: true,
-      body: payload,
-    });
-
+    await callApi(`/api/admin/provider-courses/${id}`, { method: "PUT", auth: true, body: buildPayload(formData) });
     setEditingId(null);
     setLoading(false);
     fetchProviderCourses();
   };
 
-  /* ---------------------------------- */
-  /* Delete */
-  /* ---------------------------------- */
   const handleDelete = async (id) => {
-    const confirmDelete = confirm("Delete this provider course?");
-    if (!confirmDelete) return;
-
-    await callApi(`/api/admin/provider-courses/${id}`, {
-      method: "DELETE",
-      auth: true,
-    });
-
+    if (!confirm("Delete this provider course?")) return;
+    await callApi(`/api/admin/provider-courses/${id}`, { method: "DELETE", auth: true });
     fetchProviderCourses();
   };
 
+  /* ---------- shared input class ---------- */
+  const inputCls =
+    "w-full border border-zinc-200 dark:border-zinc-700/60 px-4 py-2.5 rounded-lg " +
+    "focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400 focus:border-transparent " +
+    "transition-all outline-none bg-white dark:bg-zinc-800/70 " +
+    "text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 " +
+    "text-sm";
+
+  const selectCls =
+    "w-full border border-zinc-200 dark:border-zinc-700/60 px-4 py-2.5 rounded-lg " +
+    "focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400 focus:border-transparent " +
+    "transition-all outline-none bg-white dark:bg-zinc-800/70 " +
+    "text-zinc-900 dark:text-zinc-100 text-sm";
+
   return (
-    <div className="max-w-7xl mx-auto p-8 text-gray-800 dark:text-gray-200">
+    <div className="max-w-7xl mx-auto p-8 text-zinc-900 dark:text-zinc-100">
+
+      {/* ── Header ── */}
       <div className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Provider Courses</h1>
-          <p className="text-muted-foreground mt-1">Manage course offerings and provider details</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+            Provider Courses
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
+            Manage course offerings and provider details
+          </p>
         </div>
+
         {!editingId && (
           <Button
             onClick={() => {
               setShowForm((v) => !v);
-              if (!showForm) {
-                setFormData({
-                  degreeTypeId: "",
-                  courseId: "",
-                  specializationId: "",
-                  providerId: "",
-                  title: "",
-                  slug: "",
-                  fees: "",
-                  discountedFees: "",
-                  feesBreakdown: [],
-                  duration: "",
-                  eligibility: "",
-                  seatsAvailable: "",
-                  brochureUrl: "",
-                  weeklyEffort: "",
-                  examPattern: "",
-                  employerAcceptance: "Medium",
-                  difficultyLevel: "Intermediate",
-                  isActive: true,
-                });
-              }
+              if (!showForm) setFormData(emptyForm);
             }}
-            className="px-6 py-3 bg-black text-white dark:bg-white dark:text-black text-sm font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 shadow-md hover:shadow-lg transition-all flex items-center gap-2 h-auto"
+            className={
+              "px-5 py-2.5 text-sm font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 h-auto " +
+              "bg-zinc-900 text-white hover:bg-zinc-700 " +
+              "dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white dark:shadow-[0_0_16px_rgba(255,255,255,0.07)]"
+            }
           >
             {showForm ? (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                 Close
               </>
             ) : (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
                 New Entry
               </>
             )}
@@ -274,211 +176,154 @@ export default function ProviderCoursesPage() {
         )}
       </div>
 
-      {/* ---------------------------------- */}
-      {/* Create Form */}
-      {/* ---------------------------------- */}
+      {/* ── Create Form ── */}
       {showForm && !editingId && (
-        <div className="bg-card p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 mb-10">
-          <h2 className="text-lg font-semibold mb-6">Create New Provider Course</h2>
+        <div className="
+          mb-10 p-8 rounded-2xl border
+          bg-white dark:bg-zinc-900
+          border-zinc-200 dark:border-zinc-700/50
+          shadow-sm dark:shadow-[0_4px_32px_rgba(0,0,0,0.4)]
+        ">
+          <div className="flex items-center gap-3 mb-7">
+            <div className="w-1 h-6 rounded-full bg-zinc-900 dark:bg-zinc-300" />
+            <h2 className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">
+              Create New Provider Course
+            </h2>
+          </div>
+
           <form onSubmit={handleCreate} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-              {/* Identity Group */}
-              <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/50 rounded-xl border border-gray-100 dark:border-white/10 dark:bg-white/5">
+              {/* Identity group */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Course Title</label>
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Course Title</label>
                   <input
                     type="text"
                     placeholder="e.g. Master of Business Administration"
                     value={formData.title}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      setFormData({ ...formData, title: value, slug: generateSlug(value) });
+                      const v = e.target.value;
+                      setFormData({ ...formData, title: v, slug: generateSlug(v) });
                     }}
-                    className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
+                    className={inputCls}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">Slug</label>
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Slug</label>
                   <input
                     type="text"
                     placeholder="auto-generated-slug"
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: generateSlug(e.target.value) })}
-                    className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-muted/50 text-muted-foreground dark:bg-white/5"
+                    className={
+                      inputCls +
+                      " bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-mono text-xs"
+                    }
                   />
                 </div>
               </div>
 
-              {/* Classification Group */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Degree Type</label>
-                <DegreeTypeSelect
-                  value={formData.degreeTypeId}
-                  onChange={(value) =>
-                    setFormData({ ...formData, degreeTypeId: value, courseId: "", specializationId: "" })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Course</label>
-                <CourseSelect
-                  degreeTypeId={formData.degreeTypeId}
-                  value={formData.courseId}
-                  onChange={(value) => setFormData({ ...formData, courseId: value, specializationId: "" })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Specialization</label>
-                <SpecializationSelect
-                  courseId={formData.courseId}
-                  value={formData.specializationId}
-                  onChange={(value) => setFormData({ ...formData, specializationId: value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Provider</label>
-                <ProviderSelect
-                  value={formData.providerId}
-                  onChange={(value) => setFormData({ ...formData, providerId: value })}
-                />
-              </div>
+              {/* Classification */}
+              {[
+                { label: "Degree Type", node: <DegreeTypeSelect value={formData.degreeTypeId} onChange={(v) => setFormData({ ...formData, degreeTypeId: v, courseId: "", specializationId: "" })} /> },
+                { label: "Course", node: <CourseSelect degreeTypeId={formData.degreeTypeId} value={formData.courseId} onChange={(v) => setFormData({ ...formData, courseId: v, specializationId: "" })} /> },
+                { label: "Specialization", node: <SpecializationSelect courseId={formData.courseId} value={formData.specializationId} onChange={(v) => setFormData({ ...formData, specializationId: v })} /> },
+                { label: "Provider", node: <ProviderSelect value={formData.providerId} onChange={(v) => setFormData({ ...formData, providerId: v })} /> },
+              ].map(({ label, node }) => (
+                <div key={label} className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">{label}</label>
+                  {node}
+                </div>
+              ))}
 
-              {/* Pricing Group */}
+              {/* Pricing */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Fees (₹)</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.fees}
-                  onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Fees (₹)</label>
+                <input type="number" placeholder="0.00" value={formData.fees} onChange={(e) => setFormData({ ...formData, fees: e.target.value })} className={inputCls} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Discounted Fees (₹)</label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.discountedFees}
-                  onChange={(e) => setFormData({ ...formData, discountedFees: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Discounted Fees (₹)</label>
+                <input type="number" placeholder="0.00" value={formData.discountedFees} onChange={(e) => setFormData({ ...formData, discountedFees: e.target.value })} className={inputCls} />
               </div>
 
               {/* Seats & Eligibility */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Seats Available</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 50"
-                  value={formData.seatsAvailable}
-                  onChange={(e) => setFormData({ ...formData, seatsAvailable: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Seats Available</label>
+                <input type="number" placeholder="e.g. 50" value={formData.seatsAvailable} onChange={(e) => setFormData({ ...formData, seatsAvailable: e.target.value })} className={inputCls} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Eligibility</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Graduation with 50%"
-                  value={formData.eligibility}
-                  onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Eligibility</label>
+                <input type="text" placeholder="e.g. Graduation with 50%" value={formData.eligibility} onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })} className={inputCls} />
               </div>
 
-              {/* Logistics Group */}
+              {/* Logistics */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Duration</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 2 Years"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Duration</label>
+                <input type="text" placeholder="e.g. 2 Years" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} className={inputCls} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Weekly Effort (hrs)</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 15"
-                  value={formData.weeklyEffort}
-                  onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Weekly Effort (hrs)</label>
+                <input type="number" placeholder="e.g. 15" value={formData.weeklyEffort} onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })} className={inputCls} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Employer Acceptance</label>
-                <select
-                  value={formData.employerAcceptance}
-                  onChange={(e) => setFormData({ ...formData, employerAcceptance: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-card"
-                >
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Employer Acceptance</label>
+                <select value={formData.employerAcceptance} onChange={(e) => setFormData({ ...formData, employerAcceptance: e.target.value })} className={selectCls}>
                   <option value="High">High</option>
                   <option value="Medium">Medium</option>
                   <option value="Low">Low</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Difficulty Level</label>
-                <select
-                  value={formData.difficultyLevel}
-                  onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all outline-none bg-card"
-                >
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Difficulty Level</label>
+                <select value={formData.difficultyLevel} onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })} className={selectCls}>
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
                   <option value="Advanced">Advanced</option>
                 </select>
               </div>
 
-              {/* Resources Group */}
+              {/* Resources */}
               <div className="lg:col-span-2 space-y-2">
-                <label className="text-sm font-semibold text-foreground">Brochure URL</label>
-                <input
-                  type="text"
-                  placeholder="https://example.com/brochure.pdf"
-                  value={formData.brochureUrl}
-                  onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Brochure URL</label>
+                <input type="text" placeholder="https://example.com/brochure.pdf" value={formData.brochureUrl} onChange={(e) => setFormData({ ...formData, brochureUrl: e.target.value })} className={inputCls} />
               </div>
               <div className="lg:col-span-2 space-y-2">
-                <label className="text-sm font-semibold text-foreground">Exam Pattern</label>
-                <textarea
-                  placeholder="Describe the assessment method"
-                  value={formData.examPattern}
-                  onChange={(e) => setFormData({ ...formData, examPattern: e.target.value })}
-                  className="w-full border border-border/50 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent transition-all outline-none min-h-[46px] resize-none bg-card"
-                />
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Exam Pattern</label>
+                <textarea placeholder="Describe the assessment method" value={formData.examPattern} onChange={(e) => setFormData({ ...formData, examPattern: e.target.value })}
+                  className={inputCls + " min-h-[46px] resize-none"} />
               </div>
 
-              {/* Fees Breakdown - Full Width Area */}
-              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-6 bg-muted/50 rounded-xl border border-gray-100 dark:border-white/10 dark:bg-white/5 space-y-4">
+              {/* Fees Breakdown */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-semibold text-foreground uppercase tracking-wider">Fees Breakdown</label>
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Fees Breakdown</label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        feesBreakdown: [...formData.feesBreakdown, { label: "", amount: 0 }],
-                      })
-                    }
-                    className="px-4 py-1.5 text-xs font-bold bg-card border border-border/50 rounded-lg hover:bg-muted/50 transition-colors shadow-sm flex items-center gap-2"
+                    onClick={() => setFormData({ ...formData, feesBreakdown: [...formData.feesBreakdown, { label: "", amount: 0 }] })}
+                    className="
+                      px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5
+                      border border-zinc-200 dark:border-zinc-600
+                      bg-white dark:bg-zinc-800
+                      text-zinc-700 dark:text-zinc-300
+                      hover:bg-zinc-100 dark:hover:bg-zinc-700
+                      transition-colors
+                    "
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
                     Add Item
                   </Button>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {formData.feesBreakdown.map((fb, idx) => (
-                    <div key={idx} className="flex gap-2 items-center bg-card p-2 rounded-lg border border-border/50 shadow-sm transition-all hover:border-border">
+                    <div key={idx} className="
+                      flex gap-2 items-center p-2 rounded-lg
+                      border border-zinc-200 dark:border-zinc-700/60
+                      bg-white dark:bg-zinc-800/80
+                      shadow-sm
+                    ">
                       <input
                         type="text"
                         placeholder="Label (e.g. Admission)"
@@ -488,10 +333,10 @@ export default function ProviderCoursesPage() {
                           arr[idx].label = e.target.value;
                           setFormData({ ...formData, feesBreakdown: arr });
                         }}
-                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none"
+                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                       />
-                      <div className="flex items-center gap-1 border-l pl-2">
-                        <span className="text-muted-foreground text-xs font-bold">₹</span>
+                      <div className="flex items-center gap-1 border-l border-zinc-200 dark:border-zinc-700 pl-2">
+                        <span className="text-zinc-400 text-xs font-bold">₹</span>
                         <input
                           type="number"
                           placeholder="0"
@@ -501,57 +346,65 @@ export default function ProviderCoursesPage() {
                             arr[idx].amount = e.target.value;
                             setFormData({ ...formData, feesBreakdown: arr });
                           }}
-                          className="border-none focus:ring-0 px-2 py-1 text-sm w-20 outline-none"
+                          className="border-none focus:ring-0 px-2 py-1 text-sm w-20 outline-none bg-transparent text-zinc-800 dark:text-zinc-200"
                         />
                       </div>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
-                          const arr = formData.feesBreakdown.filter((_, i) => i !== idx);
-                          setFormData({ ...formData, feesBreakdown: arr });
-                        }}
-                        className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                        onClick={() => setFormData({ ...formData, feesBreakdown: formData.feesBreakdown.filter((_, i) => i !== idx) })}
+                        className="p-1 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                       </Button>
                     </div>
                   ))}
                 </div>
                 {formData.feesBreakdown.length === 0 && (
-                  <div className="text-center py-4 text-xs text-muted-foreground italic">No breakdown items added</div>
+                  <p className="text-center py-3 text-xs text-zinc-400 dark:text-zinc-500 italic">No breakdown items added</p>
                 )}
               </div>
 
-              {/* Status Toggle & Submit */}
-              <div className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-gray-100 dark:border-white/10">
-                <label className="flex items-center gap-3 cursor-pointer group">
+              {/* Status + Submit */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 flex flex-col md:flex-row justify-between items-center gap-6 pt-6 border-t border-zinc-100 dark:border-zinc-700/40">
+                <label className="flex items-center gap-3 cursor-pointer group select-none">
                   <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="peer sr-only"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black dark:peer-checked:bg-white"></div>
+                    <input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} className="peer sr-only" />
+                    <div className="
+                      w-11 h-6 rounded-full transition-colors
+                      bg-zinc-200 dark:bg-zinc-700
+                      peer-checked:bg-zinc-900 dark:peer-checked:bg-zinc-200
+                      peer-focus:ring-2 peer-focus:ring-zinc-400
+                      after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                      after:bg-white after:rounded-full after:h-5 after:w-5
+                      after:transition-all after:shadow-sm
+                      peer-checked:after:translate-x-full
+                    "></div>
                   </div>
-                  <span className="text-sm font-semibold text-foreground group-hover:text-black dark:group-hover:text-white transition-colors">Course is Active</span>
+                  <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                    Course is Active
+                  </span>
                 </label>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full md:w-auto px-10 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  className="
+                    w-full md:w-auto px-10 py-2.5 rounded-xl font-bold text-sm
+                    bg-zinc-900 text-white hover:bg-zinc-700
+                    dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white
+                    dark:shadow-[0_0_20px_rgba(255,255,255,0.06)]
+                    disabled:opacity-40 disabled:cursor-not-allowed
+                    transition-all flex items-center justify-center gap-2
+                  "
                 >
                   {loading ? (
                     <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      Saving...
+                      <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                      Saving…
                     </>
-                  ) : (
-                    "Add Provider Course"
-                  )}
+                  ) : "Add Provider Course"}
                 </Button>
               </div>
             </div>
@@ -559,64 +412,77 @@ export default function ProviderCoursesPage() {
         </div>
       )}
 
-      {/* ---------------------------------- */}
-      {/* Table */}
-      {/* ---------------------------------- */}
-      <div className="bg-card rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
-        <div className="p-6 border-b border-gray-50 dark:border-white/10 bg-muted/50">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Provider Courses Inventory</h2>
+      {/* ── Table ── */}
+      <div className="
+        rounded-2xl border overflow-hidden
+        bg-white dark:bg-zinc-900
+        border-zinc-200 dark:border-zinc-700/50
+        shadow-sm dark:shadow-[0_4px_40px_rgba(0,0,0,0.45)]
+      ">
+        {/* Table header bar */}
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/60 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-5 rounded-full bg-zinc-300 dark:bg-zinc-500" />
+            <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+              Provider Courses Inventory
+            </h2>
+          </div>
+          <span className="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
+            {providerCourses.length} {providerCourses.length === 1 ? "entry" : "entries"}
+          </span>
         </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Title & Course</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Logistics</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pricing</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
+            <thead>
+              <tr className="bg-zinc-50 dark:bg-zinc-800/50">
+                {["Title & Course", "Logistics", "Pricing", "Status", "Actions"].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`px-6 py-3.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ${i >= 3 ? "text-center" : ""} ${i === 4 ? "text-right" : ""}`}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {providerCourses.map((item) => (
-                <tr key={item._id} className="hover:bg-muted/50 transition-colors group">
+                <tr
+                  key={item._id}
+                  className="
+                    transition-colors
+                    hover:bg-zinc-50 dark:hover:bg-zinc-800/50
+                    group
+                  "
+                >
                   {/* Title & Course */}
                   <td className="px-6 py-4">
                     {editingId === item._id ? (
-                      <div className="space-y-2 max-w-sm">
+                      <div className="space-y-2 max-w-xs">
                         <input
                           value={formData.title}
-                          onChange={(e) => {
-                            const nameValue = e.target.value;
-                            setFormData({
-                              ...formData,
-                              title: nameValue,
-                              slug: generateSlug(nameValue),
-                            });
-                          }}
-                          className="w-full border border-border/50 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent outline-none text-sm font-medium bg-card"
+                          onChange={(e) => { const v = e.target.value; setFormData({ ...formData, title: v, slug: generateSlug(v) }); }}
+                          className={inputCls}
                           placeholder="Title"
                         />
-                        <div className="grid grid-cols-1 gap-1">
-                          <DegreeTypeSelect
-                            value={formData.degreeTypeId}
-                            onChange={(value) => setFormData({ ...formData, degreeTypeId: value, courseId: "", specializationId: "" })}
-                          />
-                          <CourseSelect
-                            degreeTypeId={formData.degreeTypeId}
-                            value={formData.courseId}
-                            onChange={(value) => setFormData({ ...formData, courseId: value, specializationId: "" })}
-                          />
-                        </div>
+                        <DegreeTypeSelect value={formData.degreeTypeId} onChange={(v) => setFormData({ ...formData, degreeTypeId: v, courseId: "", specializationId: "" })} />
+                        <CourseSelect degreeTypeId={formData.degreeTypeId} value={formData.courseId} onChange={(v) => setFormData({ ...formData, courseId: v, specializationId: "" })} />
                       </div>
                     ) : (
-                      <div className="flex flex-col">
-                        <span className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">{item.title}</span>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="text-[10px] px-1.5 py-0.5 bg-muted text-muted-foreground rounded font-bold uppercase">{item.degreeTypeId?.name}</span>
-                          <span className="text-muted-foreground text-xs">/</span>
-                          <span className="text-muted-foreground text-xs line-clamp-1">{item.courseId?.name}</span>
+                      <div>
+                        <span className="block font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-snug line-clamp-1">
+                          {item.title}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50">
+                            {item.degreeTypeId?.name}
+                          </span>
+                          <span className="text-zinc-300 dark:text-zinc-600 text-xs">/</span>
+                          <span className="text-zinc-500 dark:text-zinc-400 text-xs line-clamp-1">
+                            {item.courseId?.name}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -626,32 +492,28 @@ export default function ProviderCoursesPage() {
                   <td className="px-6 py-4">
                     {editingId === item._id ? (
                       <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="number"
-                          value={formData.weeklyEffort}
-                          onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })}
-                          className="border border-border/50 px-2 py-1 rounded-lg text-xs w-full bg-card"
-                          placeholder="Effort"
-                        />
-                        <select
-                          value={formData.difficultyLevel}
-                          onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}
-                          className="border border-border/50 px-2 py-1 rounded-lg text-xs w-full bg-card"
-                        >
-                          <option value="Beginner">Beg.</option>
-                          <option value="Intermediate">Int.</option>
-                          <option value="Advanced">Adv.</option>
+                        <input type="number" value={formData.weeklyEffort} onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })}
+                          className={inputCls + " text-xs"} placeholder="Effort" />
+                        <select value={formData.difficultyLevel} onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}
+                          className={selectCls + " text-xs"}>
+                          <option value="Beginner">Beginner</option>
+                          <option value="Intermediate">Intermediate</option>
+                          <option value="Advanced">Advanced</option>
                         </select>
                       </div>
                     ) : (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                          {item.weeklyEffort ? `${item.weeklyEffort}h/week` : "N/A"}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-xs text-zinc-600 dark:text-zinc-400">{item.weeklyEffort ? `${item.weeklyEffort}h/week` : "N/A"}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                          {item.difficultyLevel || "Unset"}
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span className="text-xs text-zinc-600 dark:text-zinc-400">{item.difficultyLevel || "Unset"}</span>
                         </div>
                       </div>
                     )}
@@ -661,30 +523,26 @@ export default function ProviderCoursesPage() {
                   <td className="px-6 py-4">
                     {editingId === item._id ? (
                       <div className="space-y-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-muted-foreground">List:</span>
-                          <input
-                            type="number"
-                            value={formData.fees}
-                            onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
-                            className="border border-border/50 px-2 py-1 rounded-lg text-xs w-16 bg-card"
-                          />
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-zinc-400 w-7">List</span>
+                          <input type="number" value={formData.fees} onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
+                            className={inputCls + " text-xs w-20"} />
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-muted-foreground font-bold">Disc:</span>
-                          <input
-                            type="number"
-                            value={formData.discountedFees}
-                            onChange={(e) => setFormData({ ...formData, discountedFees: e.target.value })}
-                            className="border border-border/50 px-2 py-1 rounded-lg text-xs w-16 font-bold bg-card"
-                          />
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-zinc-400 w-7">Disc</span>
+                          <input type="number" value={formData.discountedFees} onChange={(e) => setFormData({ ...formData, discountedFees: e.target.value })}
+                            className={inputCls + " text-xs w-20 font-bold"} />
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">₹{item.discountedFees?.toLocaleString()}</span>
+                      <div>
+                        <span className="block text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                          ₹{item.discountedFees?.toLocaleString()}
+                        </span>
                         {item.fees > item.discountedFees && (
-                          <span className="text-[10px] text-muted-foreground line-through">₹{item.fees?.toLocaleString()}</span>
+                          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 line-through">
+                            ₹{item.fees?.toLocaleString()}
+                          </span>
                         )}
                       </div>
                     )}
@@ -693,69 +551,91 @@ export default function ProviderCoursesPage() {
                   {/* Status */}
                   <td className="px-6 py-4 text-center">
                     {editingId === item._id ? (
-                      <div className="flex justify-center">
-                        <label className="relative flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.isActive}
-                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                            className="peer sr-only"
-                          />
-                          <div className="w-10 h-5 bg-gray-200 dark:bg-white/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-black dark:peer-checked:bg-white"></div>
-                        </label>
-                      </div>
+                      <label className="relative flex items-center justify-center cursor-pointer">
+                        <input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} className="peer sr-only" />
+                        <div className="
+                          w-10 h-5 rounded-full transition-colors
+                          bg-zinc-200 dark:bg-zinc-700
+                          peer-checked:bg-zinc-900 dark:peer-checked:bg-zinc-200
+                          after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                          after:bg-white after:rounded-full after:h-4 after:w-4
+                          after:transition-all
+                          peer-checked:after:translate-x-5
+                        "></div>
+                      </label>
                     ) : (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.isActive
-                        ? "bg-green-100 dark:bg-emerald-500/10 text-emerald-500"
-                        : "bg-muted text-muted-foreground"
-                        }`}>
-                        <span className={`w-1 h-1 rounded-full mr-1.5 ${item.isActive ? "bg-emerald-500/100" : "bg-gray-400 dark:bg-white/20"}`}></span>
+                      <span className={`
+                        inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                        ${item.isActive
+                          ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border border-zinc-200 dark:border-zinc-700/50"
+                        }
+                      `}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${item.isActive ? "bg-emerald-500 dark:bg-emerald-400" : "bg-zinc-300 dark:bg-zinc-600"}`} />
                         {item.isActive ? "Active" : "Inactive"}
                       </span>
                     )}
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
+                  <td className="px-6 py-4">
+                    <div className="flex justify-end gap-1.5">
                       {editingId === item._id ? (
                         <>
                           <Button
                             onClick={() => handleUpdate(item._id)}
                             size="icon"
-                            className="p-2 bg-black text-white dark:bg-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm"
-                            title="Save Changes"
+                            className="
+                              w-8 h-8 rounded-lg
+                              bg-zinc-900 text-white hover:bg-zinc-700
+                              dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-white
+                              transition-colors shadow-sm
+                            "
+                            title="Save"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                           </Button>
                           <Button
                             onClick={() => setEditingId(null)}
-                            variant="secondary"
+                            variant="ghost"
                             size="icon"
-                            className="p-2 bg-muted text-muted-foreground rounded-lg hover:bg-gray-200 transition-colors"
+                            className="w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                             title="Cancel"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                           </Button>
                         </>
                       ) : (
                         <>
                           <Button
                             onClick={() => handleEdit(item)}
-                            className="p-2 text-muted-foreground hover:text-black dark:hover:text-white hover:bg-muted rounded-lg transition-all"
-                            title="Edit Service"
+                            variant="ghost"
+                            size="icon"
+                            className="
+                              w-8 h-8 rounded-lg
+                              text-zinc-400 dark:text-zinc-500
+                              hover:text-zinc-900 dark:hover:text-zinc-100
+                              hover:bg-zinc-100 dark:hover:bg-zinc-800
+                              transition-colors opacity-0 group-hover:opacity-100
+                            "
+                            title="Edit"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
                           </Button>
-
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(item._id)}
-                            className="text-muted-foreground hover:text-red-600 hover:bg-rose-500/10"
-                            title="Delete Service"
+                            className="
+                              w-8 h-8 rounded-lg
+                              text-zinc-400 dark:text-zinc-500
+                              hover:text-red-600 dark:hover:text-red-400
+                              hover:bg-red-50 dark:hover:bg-red-500/10
+                              transition-colors opacity-0 group-hover:opacity-100
+                            "
+                            title="Delete"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
                           </Button>
                         </>
                       )}
@@ -767,26 +647,23 @@ export default function ProviderCoursesPage() {
           </table>
         </div>
 
+        {/* Empty state */}
         {providerCourses.length === 0 && (
-          <div className="p-16 text-center flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-muted/50 dark:bg-white/5 rounded-full flex items-center justify-center mb-6">
-              <svg className="w-10 h-10 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="py-20 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/50 flex items-center justify-center mb-5">
+              <svg className="w-8 h-8 text-zinc-300 dark:text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <p className="text-muted-foreground text-xl font-bold">No Provider Courses Found</p>
-            <p className="text-muted-foreground mt-2 max-w-xs mx-auto text-sm">You haven't added any course offerings yet. Fill out the form above to create your first course entry.</p>
+            <p className="text-base font-bold text-zinc-700 dark:text-zinc-300">No Provider Courses Found</p>
+            <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1.5 max-w-xs">
+              You haven't added any course offerings yet. Click <span className="font-semibold text-zinc-600 dark:text-zinc-400">New Entry</span> to get started.
+            </p>
           </div>
         )}
       </div>
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

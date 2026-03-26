@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export default function NewPageRedirect() {
   const router = useRouter();
@@ -11,14 +12,11 @@ export default function NewPageRedirect() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-      <div className="w-10 h-10 border-[3px] border-border border-t-primary rounded-full animate-spin" />
-      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+    <div className="min-h-screen bg-muted/20 dark:bg-zinc-950 flex flex-col items-center justify-center gap-4">
+      <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
+      <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest animate-pulse">
         Opening Pages...
       </p>
     </div>
   );
 }
-
-
-

@@ -2,6 +2,7 @@
 
 import TextBlock from "./TextBlock";
 import { Button } from "@/components/ui/button";
+import { Plus, FileText, Image as ImageIcon, Trash2 } from "lucide-react";
 
 // ─── Section Header ───────────────────────────────────────────────
 
@@ -66,18 +67,18 @@ export default function ContentBuilder({ form, setForm }) {
           type="button"
           onClick={addTextBlock}
           variant="outline"
-          className="px-4 py-2 text-xs font-semibold text-muted-foreground border-2 border-dashed border-border rounded-lg hover:border-border hover:bg-muted transition-colors h-auto"
+          className="px-4 py-2 text-xs font-semibold text-muted-foreground border-2 border-dashed border-border rounded-lg hover:border-border hover:bg-muted transition-colors h-auto flex items-center gap-2"
         >
-          + Add Text Block
+          <Plus className="w-4 h-4" /> Add Text Block
         </Button>
 
         <Button
           type="button"
           onClick={addImageBlock}
           variant="outline"
-          className="px-4 py-2 text-xs font-semibold text-muted-foreground border-2 border-dashed border-border rounded-lg hover:border-border hover:bg-muted transition-colors h-auto"
+          className="px-4 py-2 text-xs font-semibold text-muted-foreground border-2 border-dashed border-border rounded-lg hover:border-border hover:bg-muted transition-colors h-auto flex items-center gap-2"
         >
-          + Add Image Block
+          <Plus className="w-4 h-4" /> Add Image Block
         </Button>
       </div>
 
@@ -90,16 +91,24 @@ export default function ContentBuilder({ form, setForm }) {
           >
             {/* Block Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-muted border-b-2 border-border">
-              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                📋 {block.type === "text" ? "Text Block" : "Image Block"}
-              </span>
+              <div className="flex items-center gap-2">
+                {block.type === "text" ? (
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                ) : (
+                  <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  {block.type === "text" ? "Text Block" : "Image Block"}
+                </span>
+              </div>
               <Button
                 type="button"
                 onClick={() => removeBlock(index)}
                 variant="ghost"
                 size="sm"
-                className="text-sm text-red-500 hover:text-rose-500 font-semibold px-3 py-1 rounded hover:bg-rose-500/10 transition-colors h-auto"
+                className="text-xs text-red-500 hover:text-rose-500 font-semibold px-3 py-1 rounded hover:bg-rose-500/10 transition-colors h-auto flex items-center gap-1.5"
               >
+                <Trash2 className="w-3.5 h-3.5" />
                 Remove
               </Button>
             </div>

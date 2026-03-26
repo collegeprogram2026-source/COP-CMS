@@ -13,13 +13,10 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AlertCircle, Loader2, Plus } from "lucide-react";
 
 export function CreatePageDialog({ children, onSuccess }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    slug: "",
-    description: "",
-  });
+  const [formData, setFormData] = useState({ title: "", slug: "", description: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
@@ -27,27 +24,15 @@ export function CreatePageDialog({ children, onSuccess }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  const generateSlug = (title) => {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]+/g, "");
-  };
+  const generateSlug = (title) =>
+    title.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
 
   const handleTitleChange = (e) => {
     const title = e.target.value;
-    setFormData({
-      ...formData,
-      title,
-      slug: generateSlug(title),
-    });
+    setFormData({ ...formData, title, slug: generateSlug(title) });
   };
 
   const handleSubmit = async (e) => {
@@ -67,9 +52,7 @@ export function CreatePageDialog({ children, onSuccess }) {
         auth: true,
         body: formData,
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setOpen(false);
         if (onSuccess) onSuccess();
@@ -85,32 +68,31 @@ export function CreatePageDialog({ children, onSuccess }) {
     }
   };
 
+  const inp = "w-full px-4 py-3 bg-muted/30 dark:bg-zinc-800/40 border border-border/60 dark:border-zinc-700/60 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary/60 outline-none text-sm transition-all placeholder:text-muted-foreground/40 dark:text-foreground";
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button className="px-5 py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 font-bold transition-all shadow-md h-auto">
-            + Create Page
+          <Button className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-bold transition-all shadow-md h-auto flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Create Page
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] dark:bg-zinc-900 dark:border-zinc-800/60">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Create New Page</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-extrabold tracking-tight">Create New Page</DialogTitle>
+          <DialogDescription className="text-muted-foreground/70">
             Initialize content structure for your new page
           </DialogDescription>
         </DialogHeader>
 
-        <form id="create-page-dialog-form" onSubmit={handleSubmit} className="space-y-6 pt-4">
-          {/* Error/Alert */}
+        <form id="create-page-dialog-form" onSubmit={handleSubmit} className="space-y-5 pt-4">
+
+          {/* Error */}
           {error && (
-            <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-xl text-rose-500 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+            <div className="flex items-center gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive dark:text-red-400">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="text-xs font-bold">{error}</span>
             </div>
           )}
@@ -118,8 +100,8 @@ export function CreatePageDialog({ children, onSuccess }) {
           <div className="space-y-4">
             {/* Title */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
-                Page Title <span className="text-red-500">*</span>
+              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest ml-1">
+                Page Title <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
@@ -127,18 +109,18 @@ export function CreatePageDialog({ children, onSuccess }) {
                 value={formData.title}
                 onChange={handleTitleChange}
                 placeholder="e.g., About Us, Services"
-                className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
+                className={inp}
                 required
               />
             </div>
 
             {/* Slug */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
-                Page Slug <span className="text-red-500">*</span>
+              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest ml-1">
+                Page Slug <span className="text-destructive">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">/</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-xs font-mono">/</span>
                 <input
                   type="text"
                   name="slug"
@@ -146,14 +128,11 @@ export function CreatePageDialog({ children, onSuccess }) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      slug: e.target.value
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")
-                        .replace(/[^\w-]+/g, ""),
+                      slug: e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]+/g, ""),
                     })
                   }
                   placeholder="auto-generated-slug"
-                  className="w-full pl-7 pr-4 py-3 bg-muted/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-mono transition-all"
+                  className={inp + " pl-7 font-mono dark:bg-zinc-950/50"}
                   required
                 />
               </div>
@@ -161,7 +140,7 @@ export function CreatePageDialog({ children, onSuccess }) {
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest ml-1">
                 Description
               </label>
               <textarea
@@ -170,32 +149,35 @@ export function CreatePageDialog({ children, onSuccess }) {
                 onChange={handleInputChange}
                 placeholder="Briefly describe the purpose of this page..."
                 rows="3"
-                className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all resize-none"
+                className={inp + " resize-none"}
               />
             </div>
           </div>
 
-          <DialogFooter className="pt-2 gap-3 sm:gap-0">
+          <DialogFooter className="pt-2 gap-3 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="rounded-xl border-border px-6"
+              className="rounded-xl border-border/60 dark:border-zinc-700/60 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/70 px-6 text-sm font-medium"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="px-6 bg-black text-white rounded-xl hover:bg-gray-800 disabled:bg-gray-400 font-bold transition-all shadow-md flex items-center gap-2"
+              className="px-6 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed font-bold transition-all shadow-md flex items-center gap-2"
             >
               {loading ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Creating...
                 </>
               ) : (
-                "Create Page"
+                <>
+                  <Plus className="w-4 h-4" />
+                  Create Page
+                </>
               )}
             </Button>
           </DialogFooter>

@@ -2,6 +2,7 @@
 
 import ContentBuilder from "./ContentBuilder";
 import { Button } from "@/components/ui/button";
+import { Pencil, Plus } from "lucide-react";
 
 // ─── UI Helpers ───────────────────────────────────────────────────────
 
@@ -59,8 +60,16 @@ export default function BlogForm({
 
       {/* Header */}
       <div className="bg-primary px-6 py-4 flex items-center justify-between">
-        <h2 className="text-white font-semibold text-sm tracking-wide">
-          {submitLabel === "Update Blog" ? "✏️ Edit Blog" : "➕ New Blog"}
+        <h2 className="text-white font-semibold text-sm tracking-wide flex items-center gap-2">
+          {submitLabel === "Update Blog" ? (
+            <>
+              <Pencil className="w-3.5 h-3.5" /> Edit Blog
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" /> New Blog
+            </>
+          )}
         </h2>
         {onCancel && (
           <Button

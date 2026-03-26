@@ -16,6 +16,12 @@ import {
   Award,
   Search,
   Building2,
+  Plus,
+  X,
+  Pencil,
+  Trash2,
+  Loader2,
+  ChevronRight,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,7 +42,6 @@ const EMPTY_FORM = {
   isActive: "active",
   publicationStatus: "draft",
   type: "University",
-  // Ratings
   averageRating: 0,
   reviewCount: 0,
   ratingBreakdown: {
@@ -45,7 +50,6 @@ const EMPTY_FORM = {
     curriculum: 0,
     valueForMoney: 0,
   },
-  // Arrays
   scholarshipDescription: null,
   scholarships: [],
   approvalsDescription: null,
@@ -58,12 +62,9 @@ const EMPTY_FORM = {
   placementPartnersDescription: null,
   placementPartners: [],
   faq: [],
-  // Media
   sampleCertificateDescription: null,
   sampleCertificateImage: "",
-  // Admission
   admissionOpen: { isOpen: false, year: "", text: "", description: null },
-  // SEO
   metaTitle: "",
   metaDescription: "",
   metaKeywords: "",
@@ -73,38 +74,38 @@ const EMPTY_FORM = {
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 
 const inp =
-  "w-full border border-border/50 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm text-foreground bg-background placeholder:text-muted-foreground/50";
+  "w-full border border-border/60 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-primary/70 focus:border-primary/60 transition-all outline-none text-sm text-foreground bg-background/80 placeholder:text-muted-foreground/40 dark:bg-zinc-900/60 dark:border-zinc-700/60 dark:focus:border-primary/50";
 const sel =
-  "w-full border border-border/50 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-card text-foreground";
+  "w-full border border-border/60 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 transition-all outline-none bg-card dark:bg-zinc-900/60 dark:border-zinc-700/60 text-foreground";
 const ta =
-  "w-full border border-border/50 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none resize-none bg-background placeholder:text-muted-foreground/50";
+  "w-full border border-border/60 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-primary/60 transition-all outline-none resize-none bg-background/80 placeholder:text-muted-foreground/40 dark:bg-zinc-900/60 dark:border-zinc-700/60";
 
 // ─── Layout Primitives ────────────────────────────────────────────────────────
 
 function SectionHeader({ title, count }) {
   return (
     <div className="flex items-center gap-4 mb-6">
-      <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{title}</h3>
+      <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">{title}</h3>
       {count !== undefined && (
-        <span className="text-xs bg-muted text-muted-foreground font-bold rounded-full px-2.5 py-0.5">{count}</span>
+        <span className="text-xs bg-primary/10 text-primary font-bold rounded-full px-2.5 py-0.5 border border-primary/20">{count}</span>
       )}
-      <div className="flex-1 h-px bg-muted" />
+      <div className="flex-1 h-px bg-border/40" />
     </div>
   );
 }
 
 function FormSection({ icon: Icon, title, description, children }) {
   return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden mb-8">
-      <div className="flex items-center gap-3 px-8 py-4 border-b border-border/40 bg-muted/20">
+    <div className="bg-card dark:bg-zinc-900/40 rounded-2xl border border-border/50 dark:border-zinc-800/60 shadow-sm dark:shadow-zinc-950/40 overflow-hidden mb-8">
+      <div className="flex items-center gap-3 px-8 py-5 border-b border-border/40 dark:border-zinc-800/60 bg-muted/30 dark:bg-zinc-800/20">
         {Icon && (
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
+          <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 dark:bg-primary/15 text-primary ring-1 ring-primary/20">
             <Icon className="w-4 h-4" />
           </span>
         )}
         <div>
           <h3 className="text-sm font-bold text-foreground tracking-tight">{title}</h3>
-          {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+          {description && <p className="text-xs text-muted-foreground/70 mt-0.5">{description}</p>}
         </div>
       </div>
       <div className="p-8">{children}</div>
@@ -119,19 +120,19 @@ function Field({ label, children, span = 1, hint, required }) {
     9: "col-span-9", 10: "col-span-10", 11: "col-span-11", 12: "col-span-12",
   };
   return (
-    <div className={`flex flex-col gap-2 ${COL_SPAN[span] || "col-span-1"}`}>
-      <label className="text-xs font-bold text-foreground uppercase tracking-wide">
+    <div className={`flex flex-col gap-1.5 ${COL_SPAN[span] || "col-span-1"}`}>
+      <label className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">
         {label} {required && <span className="text-destructive">*</span>}
       </label>
       {children}
-      {hint && <span className="text-[11px] text-muted-foreground leading-tight">{hint}</span>}
+      {hint && <span className="text-[11px] text-muted-foreground/50 leading-tight">{hint}</span>}
     </div>
   );
 }
 
 function InlineLabel({ children }) {
   return (
-    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+    <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2 block">
       {children}
     </label>
   );
@@ -153,7 +154,7 @@ function ArrayEditor({ fieldName, form, setForm, fields, template, addLabel, sin
     <div>
       <div className="space-y-3">
         {items.map((item, i) => (
-          <div key={i} className="flex gap-4 items-start p-4 bg-muted/30 rounded-xl border border-border/40">
+          <div key={i} className="flex gap-4 items-start p-4 bg-muted/20 dark:bg-zinc-800/30 rounded-xl border border-border/40 dark:border-zinc-700/40">
             <div className="flex-1 grid grid-cols-3 gap-4">
               {fields.map((f) => (
                 <input
@@ -162,7 +163,7 @@ function ArrayEditor({ fieldName, form, setForm, fields, template, addLabel, sin
                   placeholder={f.label}
                   value={item[f.key] || ""}
                   onChange={(e) => update(i, f.key, e.target.value)}
-                  className={inp + " col-span-1 border-border/40"}
+                  className={inp + " col-span-1"}
                 />
               ))}
             </div>
@@ -171,9 +172,9 @@ function ArrayEditor({ fieldName, form, setForm, fields, template, addLabel, sin
               variant="ghost"
               size="icon"
               onClick={() => remove(i)}
-              className="mt-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="mt-1.5 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         ))}
@@ -181,9 +182,9 @@ function ArrayEditor({ fieldName, form, setForm, fields, template, addLabel, sin
           type="button"
           variant="outline"
           onClick={add}
-          className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary border-2 border-dashed border-border/50 rounded-xl px-4 py-3 w-full hover:border-border hover:bg-muted/50 transition-all"
+          className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary border-2 border-dashed border-border/40 dark:border-zinc-700/50 rounded-xl px-4 py-3 w-full hover:border-primary/40 hover:bg-primary/5 transition-all"
         >
-          <span>+</span> {addLabel || `Add ${singular || "Item"}`}
+          <Plus className="w-4 h-4" /> {addLabel || `Add ${singular || "Item"}`}
         </Button>
       </div>
     </div>
@@ -218,9 +219,9 @@ function GalleryEditor({ form, setForm }) {
               variant="ghost"
               size="icon"
               onClick={() => remove(i)}
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         ))}
@@ -228,9 +229,9 @@ function GalleryEditor({ form, setForm }) {
           type="button"
           variant="outline"
           onClick={add}
-          className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary border-2 border-dashed border-border/50 rounded-xl px-4 py-3 w-full hover:border-border hover:bg-muted/50 transition-all col-span-full"
+          className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary border-2 border-dashed border-border/40 dark:border-zinc-700/50 rounded-xl px-4 py-3 w-full hover:border-primary/40 hover:bg-primary/5 transition-all col-span-full"
         >
-          <span>+</span> Add Image URL
+          <Plus className="w-4 h-4" /> Add Image URL
         </Button>
       </div>
     </div>
@@ -244,7 +245,7 @@ function DescribedList({ title, descriptionKey, form, setForm, children }) {
     <div className="space-y-4">
       <SectionHeader title={title} />
       <div className="mb-4">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+        <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2 block">
           Section Description
         </label>
         <TextBlock
@@ -257,19 +258,38 @@ function DescribedList({ title, descriptionKey, form, setForm, children }) {
   );
 }
 
+// ─── Toggle Switch ────────────────────────────────────────────────────────────
+
+function Toggle({ checked, onChange, label }) {
+  return (
+    <div className="flex items-center h-[46px]">
+      <label className="flex items-center gap-3 cursor-pointer group">
+        <div className="relative flex items-center">
+          <input type="checkbox" checked={checked} onChange={onChange} className="peer sr-only" />
+          <div className="w-11 h-6 bg-muted dark:bg-zinc-700/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+        </div>
+        <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
+      </label>
+    </div>
+  );
+}
+
 // ─── Main Provider Form ───────────────────────────────────────────────────────
 
 function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel }) {
   const isEdit = submitLabel === "Update Provider";
 
   return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+    <div className="bg-card dark:bg-zinc-900/50 rounded-2xl border border-border/50 dark:border-zinc-800/60 shadow-lg dark:shadow-zinc-950/60 overflow-hidden">
       {/* Form header */}
-      <div className="bg-primary px-8 py-5 flex items-center justify-between">
-        <h2 className="text-primary-foreground font-bold tracking-tight">{isEdit ? "Edit Provider" : "Create New Provider"}</h2>
+      <div className="bg-primary dark:bg-primary/90 px-8 py-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isEdit ? <Pencil className="w-4 h-4 text-primary-foreground/80" /> : <Plus className="w-4 h-4 text-primary-foreground/80" />}
+          <h2 className="text-primary-foreground font-bold tracking-tight">{isEdit ? "Edit Provider" : "Create New Provider"}</h2>
+        </div>
         {onCancel && (
-          <Button variant="ghost" size="icon" type="button" onClick={onCancel} className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+          <Button variant="ghost" size="icon" type="button" onClick={onCancel} className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-white/10 transition-colors rounded-lg">
+            <X className="w-5 h-5" />
           </Button>
         )}
       </div>
@@ -300,7 +320,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
                 placeholder="amity-university-online"
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
-                className={inp + " font-mono bg-muted"}
+                className={inp + " font-mono dark:bg-zinc-950/60"}
               />
             </Field>
 
@@ -330,30 +350,22 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             </Field>
 
             <Field label="Active Status" span={3}>
-              <select
-                value={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.value })}
-                className={sel}
-              >
+              <select value={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.value })} className={sel}>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </Field>
 
             <Field label="Featured Flag" span={3}>
-              <div className="flex items-center h-[46px]">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} className="peer sr-only" />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </div>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Featured</span>
-                </label>
-              </div>
+              <Toggle
+                checked={form.isFeatured}
+                onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
+                label="Featured"
+              />
             </Field>
 
             <div className="col-span-12">
-              <label className="text-xs font-bold text-foreground uppercase tracking-wide mb-2 block">
+              <label className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider mb-2 block">
                 Full Content (Rich Blocks)
               </label>
               <ContentBuilder form={{ content: form.contentBlocks }} setForm={(v) => setForm({ ...form, contentBlocks: v.content })} />
@@ -391,8 +403,8 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             </Field>
 
             <div className="col-span-12">
-              <p className="text-xs text-muted-foreground mb-4 uppercase font-bold tracking-widest">Rating Breakdown</p>
-              <div className="grid grid-cols-4 gap-4 p-6 bg-muted/30 rounded-2xl border border-border/40">
+              <p className="text-[10px] text-muted-foreground/60 mb-4 uppercase font-bold tracking-widest">Rating Breakdown</p>
+              <div className="grid grid-cols-4 gap-4 p-6 bg-muted/20 dark:bg-zinc-800/20 rounded-2xl border border-border/40 dark:border-zinc-700/40">
                 {Object.keys(EMPTY_FORM.ratingBreakdown).map((k) => (
                   <Field key={k} label={k.replace(/([A-Z])/g, ' $1')} span={1}>
                     <input
@@ -412,15 +424,11 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         <FormSection icon={ClipboardList} title="Admissions" description="Admission status and details">
           <div className="grid grid-cols-12 gap-6">
             <Field label="Admissions Open" span={2}>
-              <div className="flex items-center h-[46px]">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative flex items-center">
-                    <input type="checkbox" checked={form.admissionOpen.isOpen} onChange={(e) => setForm({ ...form, admissionOpen: { ...form.admissionOpen, isOpen: e.target.checked } })} className="peer sr-only" />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </div>
-                  <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Yes</span>
-                </label>
-              </div>
+              <Toggle
+                checked={form.admissionOpen.isOpen}
+                onChange={(e) => setForm({ ...form, admissionOpen: { ...form.admissionOpen, isOpen: e.target.checked } })}
+                label="Yes"
+              />
             </Field>
 
             <Field label="Admission Year" span={2} hint='e.g. "2025"'>
@@ -553,13 +561,13 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
           </div>
         </FormSection>
 
-        <div className="flex items-center justify-end gap-4 pt-8 border-t border-border/50">
+        <div className="flex items-center justify-end gap-3 pt-8 border-t border-border/40 dark:border-zinc-800/60">
           {onCancel && (
             <Button
               type="button"
               variant="ghost"
               onClick={onCancel}
-              className="px-6 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              className="px-6 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all rounded-xl"
             >
               Cancel
             </Button>
@@ -571,10 +579,15 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
           >
             {loading ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Saving...
               </>
-            ) : submitLabel}
+            ) : (
+              <>
+                {isEdit ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {submitLabel}
+              </>
+            )}
           </Button>
         </div>
 
@@ -685,19 +698,20 @@ export default function ProvidersPage() {
     setForm(EMPTY_FORM);
   };
 
-  const statusBadge = (pub) =>
-    pub === "published"
-      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-      : "bg-amber-500/10 text-amber-500 border border-amber-500/20";
-
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/20 dark:bg-zinc-950">
       <div className="max-w-7xl mx-auto p-8">
 
+        {/* ── Page Header ── */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Providers</h1>
-            <p className="text-muted-foreground mt-1">Manage universities, edtech platforms, and learning providers</p>
+            <div className="flex items-center gap-3 mb-1">
+              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/15 text-primary ring-1 ring-primary/20">
+                <Building2 className="w-5 h-5" />
+              </span>
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Providers</h1>
+            </div>
+            <p className="text-muted-foreground/70 mt-1 ml-[52px]">Manage universities, edtech platforms, and learning providers</p>
           </div>
           {!editingId && (
             <Button
@@ -705,15 +719,9 @@ export default function ProvidersPage() {
               className="px-6 py-3 bg-primary text-primary-foreground text-sm font-bold rounded-xl hover:bg-primary/90 shadow-md hover:shadow-lg transition-all flex items-center gap-2 h-auto"
             >
               {showForm ? (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                  Close
-                </>
+                <><X className="w-4 h-4" /> Close</>
               ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
-                  New Provider
-                </>
+                <><Plus className="w-4 h-4" /> New Provider</>
               )}
             </Button>
           )}
@@ -745,99 +753,105 @@ export default function ProvidersPage() {
         )}
 
         {/* ── Table ── */}
-        <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
-          <div className="px-8 py-5 border-b border-border/40 bg-muted/20 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">All Providers</h2>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{providers.length} total</span>
+        <div className="bg-card dark:bg-zinc-900/50 rounded-2xl border border-border/50 dark:border-zinc-800/60 shadow-sm dark:shadow-zinc-950/40 overflow-hidden">
+          <div className="px-8 py-5 border-b border-border/40 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 flex items-center justify-between">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+              All Providers
+            </h2>
+            <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest bg-muted/50 dark:bg-zinc-800/60 px-3 py-1 rounded-full border border-border/40 dark:border-zinc-700/40">
+              {providers.length} total
+            </span>
           </div>
 
           {fetchLoading ? (
             <div className="p-16 text-center text-muted-foreground">
-              <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-              Loading providers...
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary/50" />
+              <p className="text-sm">Loading providers...</p>
             </div>
           ) : providers.length === 0 ? (
             <div className="p-16 text-center text-muted-foreground">
               <div className="mb-4 flex items-center justify-center">
-                <span className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted">
-                  <Building2 className="w-8 h-8 text-muted-foreground/60" />
+                <span className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted/50 dark:bg-zinc-800/40 border border-border/30 dark:border-zinc-700/30">
+                  <Building2 className="w-8 h-8 text-muted-foreground/30" />
                 </span>
               </div>
-              <p className="text-lg font-medium">No providers yet</p>
-              <p className="text-sm">Create your first university or edtech platform above.</p>
+              <p className="text-base font-semibold text-foreground/70">No providers yet</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Create your first university or edtech platform above.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-muted/30 border-b border-border/40">
+                  <tr className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
                     {["Name", "Type", "Slug", "Excerpt", "Featured", "Status", "Active", "Actions"].map((h) => (
-                      <th key={h} className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                      <th key={h} className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/40">
+                <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
                   {providers.map((item) => (
-                    <tr key={item._id} className="hover:bg-muted/30 transition-colors group">
+                    <tr key={item._id} className="hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors group">
                       <td className="px-6 py-4 font-bold text-foreground whitespace-nowrap">{item.name}</td>
                       <td className="px-6 py-4">
-                        <span className="text-muted-foreground text-sm">{item.type || "—"}</span>
+                        <span className="text-muted-foreground/70 text-sm">{item.type || "—"}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <code className="text-[10px] bg-muted px-2 py-1 rounded text-muted-foreground font-mono italic">/{item.slug}</code>
+                        <code className="text-[10px] bg-muted/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md text-muted-foreground/70 font-mono italic border border-border/30 dark:border-zinc-700/30">/{item.slug}</code>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-muted-foreground text-xs max-w-[180px] truncate">{item.shortExcerpt || "—"}</p>
+                        <p className="text-muted-foreground/60 text-xs max-w-[180px] truncate">{item.shortExcerpt || "—"}</p>
                       </td>
                       <td className="px-6 py-4">
                         {item.isFeatured ? (
-                          <span className="flex items-center justify-center w-6 h-6 bg-amber-500/10 rounded-full text-amber-500">
+                          <span className="flex items-center justify-center w-7 h-7 bg-amber-500/10 dark:bg-amber-500/15 rounded-lg text-amber-500 border border-amber-500/20">
                             <Star className="w-3.5 h-3.5 fill-amber-500" />
                           </span>
                         ) : (
-                          <span className="flex items-center justify-center w-6 h-6 text-muted-foreground/20">
+                          <span className="flex items-center justify-center w-7 h-7 text-muted-foreground/20">
                             <Star className="w-3.5 h-3.5" />
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.publicationStatus === "published"
-                          ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.publicationStatus === "published"
+                          ? "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/20"
+                          : "bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20"
                           }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${item.publicationStatus === 'published' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${item.publicationStatus === 'published' ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-amber-500 dark:bg-amber-400'}`}></span>
                           {item.publicationStatus || "draft"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.isActive === "active" || item.isActive === true
-                          ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                          : "bg-muted text-muted-foreground border border-border/50"
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.isActive === "active" || item.isActive === true
+                          ? "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20"
+                          : "bg-muted/50 dark:bg-zinc-800/50 text-muted-foreground/50 border border-border/40 dark:border-zinc-700/40"
                           }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${item.isActive === "active" || item.isActive === true ? "bg-emerald-500 dark:bg-emerald-400" : "bg-muted-foreground/30"}`}></span>
                           {item.isActive === "active" || item.isActive === true ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEdit(item)}
-                            className="text-muted-foreground hover:text-primary hover:bg-muted"
+                            className="w-8 h-8 text-muted-foreground/50 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/10 transition-colors rounded-lg"
                             title="Edit"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                            <Pencil className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(item._id)}
-                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            className="w-8 h-8 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-lg"
                             title="Delete"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </td>
@@ -861,4 +875,3 @@ export default function ProvidersPage() {
     </div>
   );
 }
-

@@ -21,13 +21,6 @@ const SECTION_NAMES = {
   "page-content": "Page Content",
 };
 
-const ACTION_COLORS = {
-  create: "bg-green-100 text-emerald-600",
-  update: "bg-blue-100 text-blue-800",
-  delete: "bg-red-100 text-rose-600",
-  view: "bg-muted text-gray-800",
-};
-
 const ACCESS_OPTIONS = [
   { id: "pages", label: "Pages" },
   { id: "providers", label: "Providers" },
@@ -40,6 +33,15 @@ const ACCESS_OPTIONS = [
   { id: "users", label: "Users Management" },
 ];
 
+/* ── shared input class ── */
+const inputCls =
+  "w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60 " +
+  "rounded-2xl px-5 py-4 text-sm font-medium " +
+  "text-zinc-900 dark:text-zinc-100 " +
+  "placeholder:text-zinc-400 dark:placeholder:text-zinc-500 " +
+  "focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400 focus:border-transparent " +
+  "outline-none transition-all";
+
 export default function UsersPage() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,23 +51,20 @@ export default function UsersPage() {
   const [totalActivities, setTotalActivities] = useState(0);
   const [users, setUsers] = useState([]);
 
-  // Modal states
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteAccessLevel, setInviteAccessLevel] = useState("viewer"); // "admin" or "viewer"
+  const [inviteAccessLevel, setInviteAccessLevel] = useState("viewer");
   const [inviteAccess, setInviteAccess] = useState([]);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteMessage, setInviteMessage] = useState({ type: "", text: "" });
 
-  // Delete user modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteUserData, setDeleteUserData] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Update access modal
   const [showUpdateAccessModal, setShowUpdateAccessModal] = useState(false);
   const [updateAccessUser, setUpdateAccessUser] = useState(null);
-  const [updateAccessLevel, setUpdateAccessLevel] = useState("viewer"); // "admin" or "viewer"
+  const [updateAccessLevel, setUpdateAccessLevel] = useState("viewer");
   const [updateAccessList, setUpdateAccessList] = useState([]);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateMessage, setUpdateMessage] = useState({ type: "", text: "" });
@@ -74,16 +73,9 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await callApi("/api/admin/users", {
-        cache: "no-store",
-        auth: true,
-      });
-
+      const res = await callApi("/api/admin/users", { cache: "no-store", auth: true });
       const data = await res.json();
-
-      if (res.ok) {
-        setUsers(data.users);
-      }
+      if (res.ok) setUsers(data.users);
     } catch (err) {
       console.error("Error fetching users:", err);
     }
@@ -93,93 +85,49 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-
       if (filterSection) params.append("section", filterSection);
       if (filterUserId) params.append("userId", filterUserId);
-
       params.append("limit", itemsPerPage);
       params.append("skip", (currentPage - 1) * itemsPerPage);
-
-      const res = await callApi(`/api/admin/activities?${params.toString()}`, {
-        cache: "no-store",
-        auth: true,
-      });
-
+      const res = await callApi(`/api/admin/activities?${params.toString()}`, { cache: "no-store", auth: true });
       const data = await res.json();
-
-      if (!res.ok) {
-        console.error("API error:", data);
-        setLoading(false);
-        return;
-      }
-
+      if (!res.ok) { setLoading(false); return; }
       setActivities(data.logs);
       setTotalActivities(data.total);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching activities:", err);
       setLoading(false);
     }
   };
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchUsers();
-      await fetchActivities();
-    };
 
-    loadData();
+  useEffect(() => {
+    fetchUsers();
+    fetchActivities();
   }, [filterSection, filterUserId, currentPage]);
 
-  const handleAccessToggle = (accessId) => {
-    setInviteAccess((prev) =>
-      prev.includes(accessId)
-        ? prev.filter((id) => id !== accessId)
-        : [...prev, accessId]
-    );
-  };
+  const handleAccessToggle = (id) =>
+    setInviteAccess((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  const handleAccessToggleForUpdate = (accessId) => {
-    setUpdateAccessList((prev) =>
-      prev.includes(accessId)
-        ? prev.filter((id) => id !== accessId)
-        : [...prev, accessId]
-    );
-  };
+  const handleAccessToggleForUpdate = (id) =>
+    setUpdateAccessList((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
   const handleDeleteUser = async () => {
     if (!deleteUserData) return;
     setDeleteLoading(true);
-
     try {
-      const res = await callApi(`/api/admin/users/${deleteUserData.userId}`, {
-        method: "DELETE",
-        auth: true,
-      });
-
+      const res = await callApi(`/api/admin/users/${deleteUserData.userId}`, { method: "DELETE", auth: true });
       const data = await res.json();
-
-      if (!res.ok) {
-        alert(data?.error || "Failed to delete user");
-        setDeleteLoading(false);
-        return;
-      }
-
+      if (!res.ok) { alert(data?.error || "Failed to delete user"); setDeleteLoading(false); return; }
       setUsers((prev) => prev.filter((u) => u.userId !== deleteUserData.userId));
       setShowDeleteModal(false);
       setDeleteUserData(null);
       alert(data.message);
-    } catch (err) {
-      alert("Network error. Please try again.");
-    } finally {
-      setDeleteLoading(false);
-    }
+    } catch { alert("Network error. Please try again."); }
+    finally { setDeleteLoading(false); }
   };
 
   const handleOpenUpdateAccessModal = (user) => {
-    if (!user || !user.userId) {
-      alert("Error: User ID not found. Please try again.");
-      return;
-    }
+    if (!user?.userId) { alert("Error: User ID not found."); return; }
     setUpdateAccessUser(user);
     setUpdateAccessLevel(user.role === "admin" ? "admin" : "viewer");
     setUpdateAccessList(user.access || []);
@@ -188,280 +136,269 @@ export default function UsersPage() {
   };
 
   const handleUpdateAccess = async () => {
-    if (!updateAccessUser || !updateAccessUser.userId) {
-      setUpdateMessage({
-        type: "error",
-        text: "User ID is missing. Please close and try again.",
-      });
-      return;
-    }
+    if (!updateAccessUser?.userId) { setUpdateMessage({ type: "error", text: "User ID is missing." }); return; }
     setUpdateLoading(true);
-
-    // If admin, grant all sections; if viewer, use selected sections
-    const accessToSend = updateAccessLevel === "admin"
-      ? ACCESS_OPTIONS.map(opt => opt.id)
-      : updateAccessList;
-
+    const accessToSend = updateAccessLevel === "admin" ? ACCESS_OPTIONS.map((o) => o.id) : updateAccessList;
     try {
       const res = await callApi(`/api/admin/users/${updateAccessUser.userId}`, {
-        method: "PUT",
-        auth: true,
-        body: {
-          access: accessToSend,
-          role: updateAccessLevel === "admin" ? "admin" : "viewer",
-        },
+        method: "PUT", auth: true,
+        body: { access: accessToSend, role: updateAccessLevel === "admin" ? "admin" : "viewer" },
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setUpdateMessage({
-          type: "error",
-          text: data?.error || "Failed to update user access",
-        });
-        setUpdateLoading(false);
-        return;
-      }
-
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.userId === updateAccessUser.userId
-            ? { ...u, access: accessToSend, role: updateAccessLevel === "admin" ? "admin" : "viewer" }
-            : u
-        )
-      );
-
-      setUpdateMessage({
-        type: "success",
-        text: "User access updated successfully!",
-      });
-
-      setTimeout(() => {
-        setShowUpdateAccessModal(false);
-        setUpdateAccessUser(null);
-        setUpdateAccessLevel("viewer");
-        setUpdateAccessList([]);
-        setUpdateMessage({ type: "", text: "" });
-      }, 1500);
-    } catch (err) {
-      setUpdateMessage({
-        type: "error",
-        text: "Network error. Please try again.",
-      });
-    } finally {
-      setUpdateLoading(false);
-    }
+      if (!res.ok) { setUpdateMessage({ type: "error", text: data?.error || "Failed to update" }); setUpdateLoading(false); return; }
+      setUsers((prev) => prev.map((u) => u.userId === updateAccessUser.userId ? { ...u, access: accessToSend, role: updateAccessLevel === "admin" ? "admin" : "viewer" } : u));
+      setUpdateMessage({ type: "success", text: "User access updated successfully!" });
+      setTimeout(() => { setShowUpdateAccessModal(false); setUpdateAccessUser(null); setUpdateAccessLevel("viewer"); setUpdateAccessList([]); setUpdateMessage({ type: "", text: "" }); }, 1500);
+    } catch { setUpdateMessage({ type: "error", text: "Network error. Please try again." }); }
+    finally { setUpdateLoading(false); }
   };
 
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
     setInviteMessage({ type: "", text: "" });
-
-    if (!inviteEmail) {
-      setInviteMessage({ type: "error", text: "Email is required" });
-      return;
-    }
-
-    // If admin, grant all sections
-    const accessToSend = inviteAccessLevel === "admin"
-      ? ACCESS_OPTIONS.map(opt => opt.id)
-      : inviteAccess;
-
-    if (accessToSend.length === 0) {
-      setInviteMessage({ type: "error", text: "Please select at least one section" });
-      return;
-    }
-
+    if (!inviteEmail) { setInviteMessage({ type: "error", text: "Email is required" }); return; }
+    const accessToSend = inviteAccessLevel === "admin" ? ACCESS_OPTIONS.map((o) => o.id) : inviteAccess;
+    if (accessToSend.length === 0) { setInviteMessage({ type: "error", text: "Please select at least one section" }); return; }
     setInviteLoading(true);
-
     try {
       const res = await callApi("/api/auth/send-invite", {
         method: "POST",
-        body: {
-          email: inviteEmail,
-          access: accessToSend,
-          role: inviteAccessLevel === "admin" ? "admin" : "viewer",
-        },
+        body: { email: inviteEmail, access: accessToSend, role: inviteAccessLevel === "admin" ? "admin" : "viewer" },
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setInviteMessage({
-          type: "error",
-          text: data?.error || "Failed to send invite",
-        });
-        setInviteLoading(false);
-        return;
-      }
-
-      setInviteMessage({
-        type: "success",
-        text: `Invitation sent to ${inviteEmail}! They will receive an email to set their password.`,
-      });
-
-      // Reset form
-      setTimeout(() => {
-        setInviteEmail("");
-        setInviteAccessLevel("viewer");
-        setInviteAccess([]);
-        setInviteMessage({ type: "", text: "" });
-        setShowInviteModal(false);
-      }, 2000);
-    } catch (err) {
-      setInviteMessage({
-        type: "error",
-        text: "Network error. Please try again.",
-      });
-    } finally {
-      setInviteLoading(false);
-    }
+      if (!res.ok) { setInviteMessage({ type: "error", text: data?.error || "Failed to send invite" }); setInviteLoading(false); return; }
+      setInviteMessage({ type: "success", text: `Invitation sent to ${inviteEmail}!` });
+      setTimeout(() => { setInviteEmail(""); setInviteAccessLevel("viewer"); setInviteAccess([]); setInviteMessage({ type: "", text: "" }); setShowInviteModal(false); }, 2000);
+    } catch { setInviteMessage({ type: "error", text: "Network error. Please try again." }); }
+    finally { setInviteLoading(false); }
   };
 
   const totalPages = Math.ceil(totalActivities / itemsPerPage);
 
+  /* ── access level toggle buttons ── */
+  const AccessLevelToggle = ({ value, onChange }) => (
+    <div className="grid grid-cols-2 gap-3">
+      {[
+        { id: "viewer", title: "Read-only", sub: "Selected sections" },
+        { id: "admin", title: "Full Admin", sub: "Grant all permissions" },
+      ].map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onChange(opt.id)}
+          className={`p-4 rounded-xl border-2 text-left transition-all ${value === opt.id
+            ? "border-zinc-900 dark:border-zinc-200 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
+            : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500"
+            }`}
+        >
+          <div className="text-sm font-bold">{opt.title}</div>
+          <div className="text-[10px] opacity-70 mt-0.5 font-medium">{opt.sub}</div>
+        </button>
+      ))}
+    </div>
+  );
+
+  /* ── permissions checklist ── */
+  const PermissionsGrid = ({ value, onChange }) => (
+    <div className="grid grid-cols-2 gap-2 bg-zinc-50 dark:bg-zinc-800/50 p-5 rounded-xl border border-zinc-200 dark:border-zinc-700/50 max-h-60 overflow-y-auto">
+      {ACCESS_OPTIONS.map((opt) => (
+        <label key={opt.id} className="flex items-center gap-2.5 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={value.includes(opt.id)}
+            onChange={() => onChange(opt.id)}
+            className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-700 focus:ring-zinc-500 cursor-pointer transition-all"
+          />
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+            {opt.label}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+
+  /* ── modal shell ── */
+  const ModalShell = ({ onClose, children }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+      <div className="
+        relative w-full max-w-lg p-8 rounded-2xl
+        bg-white dark:bg-zinc-900
+        border border-zinc-200 dark:border-zinc-700/50
+        shadow-xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.6)]
+        animate-in zoom-in-95 slide-in-from-bottom-4 duration-200
+      ">
+        {children}
+      </div>
+    </div>
+  );
+
+  /* ── modal close button ── */
+  const CloseBtn = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-lg leading-none"
+    >
+      ×
+    </button>
+  );
+
+  /* ── feedback banner ── */
+  const FeedbackBanner = ({ type, text }) =>
+    text ? (
+      <div className={`p-3.5 rounded-xl text-xs font-bold uppercase tracking-wider text-center animate-in zoom-in-95 duration-200 ${type === "success"
+        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+        : "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20"
+        }`}>
+        {text}
+      </div>
+    ) : null;
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-20">
       <div className="max-w-7xl mx-auto px-6 py-10">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">Activity Log & Users</h1>
-            <p className="text-sm font-medium text-muted-foreground mt-2">
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+              Activity Log & Users
+            </h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               Manage administrative access and track system-wide changes
             </p>
           </div>
           <Button
             onClick={() => setShowInviteModal(true)}
-            className="inline-flex items-center px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+            className="
+              px-5 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2
+              bg-zinc-900 text-white hover:bg-zinc-700
+              dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white
+              dark:shadow-[0_0_16px_rgba(255,255,255,0.06)]
+              shadow-sm
+            "
           >
-            + Invite Admin
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+            Invite Admin
           </Button>
         </div>
 
-        {/* ================================ */}
-        {/* Users Section */}
-        {/* ================================ */}
+        {/* ── Users Section ── */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Active Users</h2>
-            <div className="h-px flex-1 bg-border" />
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">Active Users</span>
+            <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users.length > 0 ? (
-              users.map((user) => (
-                <div
-                  key={user.userId}
-                  className="group bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-border transition-all"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <div className="font-bold text-foreground tracking-tight truncate">{user.userName}</div>
-                      <div className="text-[11px] font-medium text-muted-foreground mt-1 truncate">{user.userEmail}</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {users.length > 0 ? users.map((user) => (
+              <div
+                key={user.userId}
+                className="
+                  group p-5 rounded-2xl border transition-all
+                  bg-white dark:bg-zinc-900
+                  border-zinc-200 dark:border-zinc-700/50
+                  hover:border-zinc-300 dark:hover:border-zinc-600
+                  shadow-sm dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]
+                  hover:shadow-md dark:hover:shadow-[0_4px_24px_rgba(0,0,0,0.4)]
+                "
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate text-sm">
+                      {user.userName}
                     </div>
-                    <div>
-                      {user.role === "admin" ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wider">
-                          Admin
+                    <div className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5 truncate">
+                      {user.userEmail}
+                    </div>
+                  </div>
+                  {user.role === "admin" ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
+                      Admin
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
+                      Read-only
+                    </span>
+                  )}
+                </div>
+
+                {user.role !== "admin" && user.access?.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Permissions</p>
+                    <div className="flex flex-wrap gap-1">
+                      {user.access.slice(0, 3).map((acc) => (
+                        <span key={acc} className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50 px-2 py-0.5 rounded text-[10px] font-medium">
+                          {SECTION_NAMES[acc] || acc}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wider">
-                          Read-only
+                      ))}
+                      {user.access.length > 3 && (
+                        <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium self-center ml-1">
+                          +{user.access.length - 3} more
                         </span>
                       )}
                     </div>
                   </div>
+                )}
 
-                  {user.role !== "admin" && user.access && user.access.length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">Permissions</p>
-                      <div className="flex flex-wrap gap-1">
-                        {user.access.slice(0, 3).map((acc) => (
-                          <span
-                            key={acc}
-                            className="bg-muted text-muted-foreground px-2 py-0.5 rounded text-[10px] font-medium border border-border/50"
-                          >
-                            {SECTION_NAMES[acc] || acc}
-                          </span>
-                        ))}
-                        {user.access.length > 3 && (
-                          <span className="text-[10px] text-muted-foreground font-medium self-center ml-1">
-                            +{user.access.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {user.role === "admin" && (
-                    <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-muted-foreground italic">
-                      <span className="text-rose-500">✓</span> Full system access
-                    </div>
-                  )}
-
-                  <div className="mt-6 grid grid-cols-3 gap-2">
-                    <Button
-                      onClick={() => setFilterUserId(user.userId)}
-                      variant="outline"
-                      size="sm"
-                      className="text-center text-[10px] font-bold text-muted-foreground bg-muted hover:bg-muted px-2 py-2 rounded-lg border border-border/50 transition-colors uppercase tracking-widest"
-                      title="View Activity"
-                    >
-                      Logs
-                    </Button>
-                    <Button
-                      onClick={() => handleOpenUpdateAccessModal(user)}
-                      variant="outline"
-                      size="sm"
-                      className="text-center text-[10px] font-bold text-muted-foreground bg-muted hover:bg-muted px-2 py-2 rounded-lg border border-border/50 transition-colors uppercase tracking-widest"
-                      title="Update Access"
-                    >
-                      Access
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setDeleteUserData(user);
-                        setShowDeleteModal(true);
-                      }}
-                      variant="destructive"
-                      size="sm"
-                      className="text-center text-[10px] font-bold text-rose-500 bg-rose-50/50 hover:bg-rose-50 px-2 py-2 rounded-lg border border-rose-100 transition-colors uppercase tracking-widest"
-                      title="Delete User"
-                    >
-                      Del
-                    </Button>
+                {user.role === "admin" && (
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">
+                    <span className="text-emerald-500 dark:text-emerald-400">✓</span> Full system access
                   </div>
+                )}
+
+                <div className="mt-5 grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setFilterUserId(user.userId)}
+                    className="text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700/50 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  >
+                    Logs
+                  </button>
+                  <button
+                    onClick={() => handleOpenUpdateAccessModal(user)}
+                    className="text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700/50 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  >
+                    Access
+                  </button>
+                  <button
+                    onClick={() => { setDeleteUserData(user); setShowDeleteModal(true); }}
+                    className="text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg transition-colors bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20"
+                  >
+                    Del
+                  </button>
                 </div>
-              ))
-            ) : (
-              <div className="col-span-full py-10 text-center bg-card rounded-2xl border border-dashed border-border text-muted-foreground text-sm font-medium">
+              </div>
+            )) : (
+              <div className="col-span-full py-10 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 text-sm font-medium bg-white dark:bg-zinc-900">
                 No users found
               </div>
             )}
           </div>
         </div>
 
-        {/* ================================ */}
-        {/* Activity Section Header & Filters */}
-        {/* ================================ */}
-        <div className="flex flex-col sm:flex-row justify-between items-end gap-6 mb-6">
+        {/* ── Activity Header & Filters ── */}
+        <div className="flex flex-col sm:flex-row justify-between items-end gap-5 mb-5">
           <div className="flex items-center gap-3">
-            <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">System Activity Logs</h2>
-            <div className="h-[2px] w-8 bg-primary rounded-full" />
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">System Activity Logs</span>
+            <div className="h-px w-8 bg-zinc-400 dark:bg-zinc-600 rounded-full" />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 bg-card p-1.5 rounded-2xl border border-border shadow-sm w-full sm:w-auto">
-            {/* Section Filter */}
-            <div className="flex items-center flex-1 sm:flex-none">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-3 mr-2">Section</span>
+          <div className="
+            flex flex-wrap items-center gap-2 w-full sm:w-auto
+            bg-white dark:bg-zinc-900
+            border border-zinc-200 dark:border-zinc-700/50
+            rounded-xl p-1.5
+            shadow-sm dark:shadow-[0_2px_16px_rgba(0,0,0,0.3)]
+          ">
+            <div className="flex items-center flex-1 sm:flex-none gap-2 px-2">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest whitespace-nowrap">Section</span>
               <select
                 value={filterSection}
-                onChange={(e) => {
-                  setFilterSection(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="bg-muted border-none text-xs font-bold text-foreground px-3 py-2 rounded-lg focus:ring-2 focus:ring-border outline-none transition-all cursor-pointer w-full"
+                onChange={(e) => { setFilterSection(e.target.value); setCurrentPage(1); }}
+                className="bg-zinc-100 dark:bg-zinc-800 border-none text-xs font-semibold text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-zinc-400 outline-none transition-all cursor-pointer"
               >
                 <option value="">All Sections</option>
                 {Object.entries(SECTION_NAMES).map(([key, label]) => (
@@ -470,18 +407,14 @@ export default function UsersPage() {
               </select>
             </div>
 
-            <div className="w-px h-6 bg-muted hidden sm:block" />
+            <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700 hidden sm:block" />
 
-            {/* User Filter */}
-            <div className="flex items-center flex-1 sm:flex-none">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-2 mr-2">User</span>
+            <div className="flex items-center flex-1 sm:flex-none gap-2 px-2">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">User</span>
               <select
                 value={filterUserId}
-                onChange={(e) => {
-                  setFilterUserId(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="bg-muted border-none text-xs font-bold text-foreground px-3 py-2 rounded-lg focus:ring-2 focus:ring-border outline-none transition-all cursor-pointer w-full min-w-[120px]"
+                onChange={(e) => { setFilterUserId(e.target.value); setCurrentPage(1); }}
+                className="bg-zinc-100 dark:bg-zinc-800 border-none text-xs font-semibold text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-zinc-400 outline-none transition-all cursor-pointer min-w-[110px]"
               >
                 <option value="">All Users</option>
                 {users.map((user) => (
@@ -491,99 +424,91 @@ export default function UsersPage() {
             </div>
 
             {filterUserId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setFilterUserId("");
-                  setCurrentPage(1);
-                }}
-                className="ml-2 text-[10px] font-bold text-rose-500 hover:text-rose-600 pr-3"
+              <button
+                onClick={() => { setFilterUserId(""); setCurrentPage(1); }}
+                className="text-[10px] font-bold text-rose-500 dark:text-rose-400 hover:text-rose-600 dark:hover:text-rose-300 pr-2 transition-colors"
               >
                 Clear ×
-              </Button>
+              </button>
             )}
           </div>
         </div>
 
-        {/* ================================ */}
-        {/* Activity Table */}
-        {/* ================================ */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden text-foreground">
+        {/* ── Activity Table ── */}
+        <div className="
+          rounded-2xl border overflow-hidden
+          bg-white dark:bg-zinc-900
+          border-zinc-200 dark:border-zinc-700/50
+          shadow-sm dark:shadow-[0_4px_40px_rgba(0,0,0,0.45)]
+        ">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-background border-b border-border/50">
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Administrator</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Action</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Section</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Target Item</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Timestamp</th>
+                <tr className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-100 dark:border-zinc-800">
+                  {["Administrator", "Action", "Section", "Target Item", "Timestamp"].map((h) => (
+                    <th key={h} className="px-6 py-3.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-
-              <tbody className="divide-y divide-border/50">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {loading ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-20 text-center">
-                      <div className="w-10 h-10 border-[3px] border-border/50 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Fetching Logs</p>
+                      <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-300 rounded-full animate-spin mx-auto mb-4" />
+                      <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Fetching Logs…</p>
                     </td>
                   </tr>
-                ) : activities.length > 0 ? (
-                  activities.map((activity) => (
-                    <tr key={activity._id} className="group hover:bg-muted transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-foreground tracking-tight">{activity.userName}</span>
-                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{activity.userEmail}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${activity.action === 'create' ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" :
-                            activity.action === 'update' ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20" :
-                              activity.action === 'delete' ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                "bg-muted text-muted-foreground border-border"
-                            }`}
-                        >
-                          {activity.action}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-lg border border-border/50">
-                          {SECTION_NAMES[activity.section] || activity.section}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="max-w-xs">
-                          <p className="text-sm font-bold text-foreground tracking-tight truncate">
-                            {activity.itemName || activity.itemId || "-"}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5 truncate italic" title={activity.details}>
-                            {activity.details || "No additional details"}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-bold text-foreground">
-                            {new Date(activity.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </span>
-                          <span className="text-[10px] font-medium text-muted-foreground uppercase">
-                            {new Date(activity.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+                ) : activities.length > 0 ? activities.map((activity) => (
+                  <tr key={activity._id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">{activity.userName}</div>
+                      <div className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">{activity.userEmail}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${activity.action === "create"
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20"
+                        : activity.action === "update"
+                          ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20"
+                          : activity.action === "delete"
+                            ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20"
+                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700/50"
+                        }`}>
+                        {activity.action}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700/50">
+                        {SECTION_NAMES[activity.section] || activity.section}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="max-w-xs">
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                          {activity.itemName || activity.itemId || "—"}
+                        </p>
+                        <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5 truncate italic" title={activity.details}>
+                          {activity.details || "No additional details"}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                        {new Date(activity.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                      </div>
+                      <div className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 uppercase mt-0.5">
+                        {new Date(activity.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
                   <tr>
                     <td colSpan="5" className="px-6 py-20 text-center">
-                      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 border border-border/50">
+                      <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 flex items-center justify-center mx-auto mb-4">
                         <span className="text-2xl">📋</span>
                       </div>
-                      <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em]">No activities found</p>
+                      <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">No activities found</p>
                     </td>
                   </tr>
                 )}
@@ -592,358 +517,185 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {/* ================================ */}
-        {/* Pagination */}
-        {/* ================================ */}
+        {/* ── Pagination ── */}
         {totalPages > 1 && (
-          <div className="mt-10 flex justify-center items-center gap-4">
-            <Button
+          <div className="mt-8 flex justify-center items-center gap-4">
+            <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              variant="outline"
-              size="sm"
-              className="inline-flex items-center px-4 py-2 bg-card border border-border text-xs font-bold text-muted-foreground rounded-xl hover:bg-muted disabled:opacity-40 transition-all shadow-sm hover:shadow active:scale-95"
+              className="
+                px-4 py-2 text-xs font-bold rounded-xl transition-all
+                bg-white dark:bg-zinc-900
+                border border-zinc-200 dark:border-zinc-700/50
+                text-zinc-500 dark:text-zinc-400
+                hover:bg-zinc-100 dark:hover:bg-zinc-800
+                hover:text-zinc-900 dark:hover:text-zinc-100
+                disabled:opacity-40 disabled:cursor-not-allowed
+                shadow-sm
+              "
             >
               ← Previous
-            </Button>
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-4 py-2 bg-muted rounded-lg">
-              Page <span className="text-foreground">{currentPage}</span> of <span className="text-foreground">{totalPages}</span>
+            </button>
+            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700/50">
+              Page <span className="text-zinc-700 dark:text-zinc-200">{currentPage}</span> of <span className="text-zinc-700 dark:text-zinc-200">{totalPages}</span>
             </div>
-            <Button
+            <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              variant="outline"
-              size="sm"
-              className="inline-flex items-center px-4 py-2 bg-card border border-border text-xs font-bold text-muted-foreground rounded-xl hover:bg-muted disabled:opacity-40 transition-all shadow-sm hover:shadow active:scale-95"
+              className="
+                px-4 py-2 text-xs font-bold rounded-xl transition-all
+                bg-white dark:bg-zinc-900
+                border border-zinc-200 dark:border-zinc-700/50
+                text-zinc-500 dark:text-zinc-400
+                hover:bg-zinc-100 dark:hover:bg-zinc-800
+                hover:text-zinc-900 dark:hover:text-zinc-100
+                disabled:opacity-40 disabled:cursor-not-allowed
+                shadow-sm
+              "
             >
               Next →
-            </Button>
+            </button>
           </div>
         )}
 
-        {/* ================================ */}
-        {/* Invite Admin Modal */}
-        {/* ================================ */}
+        {/* ── Invite Modal ── */}
         {showInviteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowInviteModal(false)} />
-            <div className="relative bg-card rounded-[2.5rem] shadow-2xl w-full max-w-lg p-10 border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-5 duration-300">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Invite Admin</h2>
-                  <p className="text-sm font-medium text-muted-foreground mt-2">
-                    Send a system invitation to grant administrative access.
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowInviteModal(false)}
-                  className="w-10 h-10 bg-muted flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-all"
-                >
-                  ×
-                </Button>
+          <ModalShell onClose={() => setShowInviteModal(false)}>
+            <div className="flex justify-between items-start mb-7">
+              <div>
+                <h2 className="text-2xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Invite Admin</h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Send a system invitation to grant access.</p>
+              </div>
+              <CloseBtn onClick={() => setShowInviteModal(false)} />
+            </div>
+
+            <form onSubmit={handleInviteSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Email Address</label>
+                <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="admin@example.com" className={inputCls} required />
               </div>
 
-              <form onSubmit={handleInviteSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="admin@example.com"
-                    className="w-full bg-muted border border-border rounded-2xl px-5 py-4 text-sm font-medium text-foreground focus:ring-4 focus:ring-border/50 focus:border-border outline-none transition-all placeholder:text-muted-foreground/30"
-                    required
-                  />
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Access Level</label>
+                <AccessLevelToggle
+                  value={inviteAccessLevel}
+                  onChange={(v) => { setInviteAccessLevel(v); if (v === "admin") setInviteAccess(ACCESS_OPTIONS.map((o) => o.id)); else setInviteAccess([]); }}
+                />
+              </div>
+
+              {inviteAccessLevel === "viewer" && (
+                <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Permitted Sections</label>
+                  <PermissionsGrid value={inviteAccess} onChange={handleAccessToggle} />
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">
-                    Access Level
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setInviteAccessLevel("viewer");
-                        setInviteAccess([]);
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all h-auto ${inviteAccessLevel === "viewer"
-                        ? "border-slate-900 bg-primary text-white"
-                        : "border-border/50 bg-muted text-muted-foreground hover:border-border"
-                        }`}
-                    >
-                      <div className="text-sm font-bold">Read-only</div>
-                      <div className="text-[10px] opacity-70 mt-1 font-medium">Selected sections</div>
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setInviteAccessLevel("admin");
-                        setInviteAccess(ACCESS_OPTIONS.map(opt => opt.id));
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all h-auto ${inviteAccessLevel === "admin"
-                        ? "border-slate-900 bg-primary text-white"
-                        : "border-border/50 bg-muted text-muted-foreground hover:border-border"
-                        }`}
-                    >
-                      <div className="text-sm font-bold">Full Admin</div>
-                      <div className="text-[10px] opacity-70 mt-1 font-medium">Grant all permissions</div>
-                    </Button>
-                  </div>
-                </div>
+              <FeedbackBanner {...inviteMessage} />
 
-                {inviteAccessLevel === "viewer" && (
-                  <div className="animate-in slide-in-from-top-2 duration-300">
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 ml-1">
-                      Permitted Sections
-                    </label>
-                    <div className="grid grid-cols-2 gap-2 bg-muted p-5 rounded-3xl border border-border/50">
-                      {ACCESS_OPTIONS.map((option) => (
-                        <label
-                          key={option.id}
-                          className="flex items-center gap-3 cursor-pointer group"
-                        >
-                          <div className="relative flex items-center justify-center">
-                            <input
-                              type="checkbox"
-                              checked={inviteAccess.includes(option.id)}
-                              onChange={() => handleAccessToggle(option.id)}
-                              className="w-5 h-5 rounded-lg border-border text-foreground focus:ring-slate-900 transition-all cursor-pointer"
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {inviteMessage.text && (
-                  <div
-                    className={`p-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-center animate-in zoom-in-95 duration-200 ${inviteMessage.type === "success"
-                      ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                      : "bg-rose-50 text-rose-600 border border-rose-100"
-                      }`}
-                  >
-                    {inviteMessage.text}
-                  </div>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowInviteModal(false);
-                      setInviteEmail("");
-                      setInviteAccessLevel("viewer");
-                      setInviteAccess([]);
-                      setInviteMessage({ type: "", text: "" });
-                    }}
-                    className="flex-1 px-8 py-4 bg-card border border-border text-muted-foreground text-sm font-bold rounded-2xl hover:bg-muted transition-all active:scale-95"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={inviteLoading}
-                    className="flex-1 px-8 py-4 bg-primary text-white text-sm font-bold rounded-2xl hover:bg-primary disabled:opacity-60 transition-all shadow-lg shadow-border/50 active:scale-95"
-                  >
-                    {inviteLoading ? "Sending Invitation..." : "Send Invitation"}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button"
+                  onClick={() => { setShowInviteModal(false); setInviteEmail(""); setInviteAccessLevel("viewer"); setInviteAccess([]); setInviteMessage({ type: "", text: "" }); }}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-sm border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all">
+                  Cancel
+                </button>
+                <button type="submit" disabled={inviteLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-sm bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-white disabled:opacity-40 transition-all">
+                  {inviteLoading ? "Sending…" : "Send Invitation"}
+                </button>
+              </div>
+            </form>
+          </ModalShell>
         )}
 
-        {/* ================================ */}
-        {/* Delete User Modal */}
-        {/* ================================ */}
+        {/* ── Delete Modal ── */}
         {showDeleteModal && deleteUserData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowDeleteModal(false)} />
-            <div className="relative bg-card rounded-[2.5rem] shadow-2xl w-full max-w-md p-10 border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-5 duration-300">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Delete User</h2>
-                  <p className="text-sm font-medium text-muted-foreground mt-2">
-                    Removing access for <span className="text-foreground font-bold">{deleteUserData.userName}</span>
-                  </p>
-                </div>
-              </div>
+          <ModalShell onClose={() => setShowDeleteModal(false)}>
+            <div className="mb-6">
+              <h2 className="text-2xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Delete User</h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                Removing access for <span className="font-bold text-zinc-700 dark:text-zinc-300">{deleteUserData.userName}</span>
+              </p>
+            </div>
 
-              <div className="p-6 bg-rose-50 border border-rose-100 rounded-3xl mb-8">
-                <p className="text-xs font-bold text-rose-600 uppercase tracking-widest leading-relaxed">
-                  ⚠️ Warning: This action is permanent. All administrative access for {deleteUserData.userEmail} will be revoked immediately.
+            <div className="p-4 mb-6 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+              <p className="text-xs font-bold text-rose-600 dark:text-rose-400 leading-relaxed">
+                ⚠️ This action is permanent. All administrative access for <span className="underline">{deleteUserData.userEmail}</span> will be revoked immediately.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowDeleteModal(false); setDeleteUserData(null); }}
+                disabled={deleteLoading}
+                className="flex-1 px-6 py-3 rounded-xl font-bold text-sm border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all">
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleteLoading}
+                className="flex-1 px-6 py-3 rounded-xl font-bold text-sm bg-rose-600 text-white hover:bg-rose-700 dark:hover:bg-rose-500 disabled:opacity-40 transition-all shadow-sm dark:shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+                {deleteLoading ? "Deleting…" : "Delete User"}
+              </button>
+            </div>
+          </ModalShell>
+        )}
+
+        {/* ── Update Access Modal ── */}
+        {showUpdateAccessModal && updateAccessUser && (
+          <ModalShell onClose={() => setShowUpdateAccessModal(false)}>
+            <div className="flex justify-between items-start mb-7">
+              <div>
+                <h2 className="text-2xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Access Control</h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                  Managing permissions for <span className="font-bold text-zinc-700 dark:text-zinc-300">{updateAccessUser.userName}</span>
                 </p>
               </div>
-
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setDeleteUserData(null);
-                  }}
-                  disabled={deleteLoading}
-                  className="flex-1 px-8 py-4 bg-card border border-border text-muted-foreground text-sm font-bold rounded-2xl hover:bg-muted transition-all active:scale-95"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleDeleteUser}
-                  disabled={deleteLoading}
-                  variant="destructive"
-                  className="flex-1 px-8 py-4 bg-rose-600 text-white text-sm font-bold rounded-2xl hover:bg-rose-700 disabled:opacity-60 transition-all shadow-lg shadow-rose-200 active:scale-95"
-                >
-                  {deleteLoading ? "Deleting..." : "Delete User"}
-                </Button>
-              </div>
+              <CloseBtn onClick={() => setShowUpdateAccessModal(false)} />
             </div>
-          </div>
-        )}
 
-        {/* ================================ */}
-        {/* Update User Access Modal */}
-        {/* ================================ */}
-        {showUpdateAccessModal && updateAccessUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowUpdateAccessModal(false)} />
-            <div className="relative bg-card rounded-[2.5rem] shadow-2xl w-full max-w-lg p-10 border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-5 duration-300">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Access Control</h2>
-                  <p className="text-sm font-medium text-muted-foreground mt-2">
-                    Manage permissions for <span className="text-foreground font-bold">{updateAccessUser.userName}</span>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Access Level</label>
+                <AccessLevelToggle
+                  value={updateAccessLevel}
+                  onChange={(v) => { setUpdateAccessLevel(v); if (v === "admin") setUpdateAccessList(ACCESS_OPTIONS.map((o) => o.id)); else setUpdateAccessList(updateAccessUser.access || []); }}
+                />
+              </div>
+
+              {updateAccessLevel === "viewer" ? (
+                <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Permitted Sections</label>
+                  <PermissionsGrid value={updateAccessList} onChange={handleAccessToggleForUpdate} />
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 animate-in fade-in duration-200">
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                    ✓ Administrator status grants unrestricted access to all system sections and configurations.
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowUpdateAccessModal(false)}
-                  className="w-10 h-10 bg-muted flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-muted-foreground transition-all"
-                >
-                  ×
-                </Button>
-              </div>
+              )}
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ml-1">
-                    Access Level
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setUpdateAccessLevel("viewer");
-                        setUpdateAccessList(updateAccessUser.access || []);
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all h-auto ${updateAccessLevel === "viewer"
-                        ? "border-slate-900 bg-primary text-white"
-                        : "border-border/50 bg-muted text-muted-foreground hover:border-border"
-                        }`}
-                    >
-                      <div className="text-sm font-bold">Read-only</div>
-                      <div className="text-[10px] opacity-70 mt-1 font-medium">Selected sections</div>
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setUpdateAccessLevel("admin");
-                        setUpdateAccessList(ACCESS_OPTIONS.map(opt => opt.id));
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all h-auto ${updateAccessLevel === "admin"
-                        ? "border-slate-900 bg-primary text-white"
-                        : "border-border/50 bg-muted text-muted-foreground hover:border-border"
-                        }`}
-                    >
-                      <div className="text-sm font-bold">Full Admin</div>
-                      <div className="text-[10px] opacity-70 mt-1 font-medium">Grant all permissions</div>
-                    </Button>
-                  </div>
-                </div>
+              <FeedbackBanner {...updateMessage} />
 
-                {updateAccessLevel === "viewer" ? (
-                  <div className="animate-in slide-in-from-top-2 duration-300">
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 ml-1">
-                      Permitted Sections
-                    </label>
-                    <div className="grid grid-cols-2 gap-2 bg-muted p-5 rounded-3xl border border-border/50 max-h-60 overflow-y-auto custom-scrollbar">
-                      {ACCESS_OPTIONS.map((option) => (
-                        <label
-                          key={option.id}
-                          className="flex items-center gap-3 cursor-pointer group"
-                        >
-                          <div className="relative flex items-center justify-center">
-                            <input
-                              type="checkbox"
-                              checked={updateAccessList.includes(option.id)}
-                              onChange={() => handleAccessToggleForUpdate(option.id)}
-                              className="w-5 h-5 rounded-lg border-border text-foreground focus:ring-slate-900 transition-all cursor-pointer"
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-5 bg-rose-50 border border-rose-100 rounded-3xl animate-in fade-in duration-300">
-                    <p className="text-xs font-bold text-rose-600 uppercase tracking-widest leading-relaxed">
-                      ✓ Administrator status grants unrestricted access to all system sections and configurations.
-                    </p>
-                  </div>
-                )}
-
-                {updateMessage.text && (
-                  <div
-                    className={`p-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-center animate-in zoom-in-95 duration-200 ${updateMessage.type === "success"
-                      ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                      : "bg-rose-50 text-rose-600 border border-rose-100"
-                      }`}
-                  >
-                    {updateMessage.text}
-                  </div>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setShowUpdateAccessModal(false);
-                      setUpdateAccessUser(null);
-                      setUpdateAccessLevel("viewer");
-                      setUpdateAccessList([]);
-                      setUpdateMessage({ type: "", text: "" });
-                    }}
-                    disabled={updateLoading}
-                    className="flex-1 px-8 py-4 bg-card border border-border text-muted-foreground text-sm font-bold rounded-2xl hover:bg-muted transition-all active:scale-95"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleUpdateAccess}
-                    disabled={updateLoading}
-                    className="flex-1 px-8 py-4 bg-primary text-white text-sm font-bold rounded-2xl hover:bg-primary disabled:opacity-60 transition-all shadow-lg shadow-border/50 active:scale-95"
-                  >
-                    {updateLoading ? "Saving Changes..." : "Update Access"}
-                  </Button>
-                </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => { setShowUpdateAccessModal(false); setUpdateAccessUser(null); setUpdateAccessLevel("viewer"); setUpdateAccessList([]); setUpdateMessage({ type: "", text: "" }); }}
+                  disabled={updateLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-sm border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateAccess}
+                  disabled={updateLoading}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-sm bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-white disabled:opacity-40 transition-all">
+                  {updateLoading ? "Saving…" : "Update Access"}
+                </button>
               </div>
             </div>
-          </div>
+          </ModalShell>
         )}
       </div>
     </div>
   );
 }
-
