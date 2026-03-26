@@ -276,18 +276,18 @@ export default function EditPagePage({ params: paramsPromise }) {
         {/* ── Action Controls ── */}
         <div className="flex flex-wrap items-center gap-3 px-1">
           <Button
-            onClick={() => navigateGuarded(`/admin/pages/${page.slug}/content`)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
-          >
-            <FileText className="w-4 h-4" />
-            Manage Content
-          </Button>
-          <Button
             onClick={() => setShowCreateModal(true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
+            className="w-full sm:w-44 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-xl font-bold transition-all hover:bg-emerald-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
           >
             <Layers className="w-4 h-4" />
             Content Model
+          </Button>
+          <Button
+            onClick={() => navigateGuarded(`/admin/pages/${page.slug}/content`)}
+            className="w-full sm:w-44 flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-xl font-bold transition-all hover:bg-blue-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
+          >
+            <FileText className="w-4 h-4" />
+            Content
           </Button>
         </div>
 
