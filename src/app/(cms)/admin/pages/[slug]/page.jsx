@@ -29,6 +29,7 @@ import {
   Lock,
   PlusCircle,
   Layers,
+  Settings,
 } from "lucide-react";
 
 const FIELD_TYPES = [
@@ -65,6 +66,7 @@ export default function EditPagePage({ params: paramsPromise }) {
   const [sectionToEdit, setSectionToEdit] = useState(null);
   const [toast, setToast] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
   const router = useRouter();
 
   useEffect(() => { paramsPromise.then(setParams); }, [paramsPromise]);
@@ -244,7 +246,9 @@ export default function EditPagePage({ params: paramsPromise }) {
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-foreground">{page.title}</h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">Model Editor</span>
+              <span className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">
+                {activeTab === "general" ? "Page Settings" : "Architecture Editor"}
+              </span>
               <span className="text-muted-foreground/30">•</span>
               <code className="text-xs bg-muted/50 dark:bg-zinc-800/60 px-2 py-0.5 rounded-md text-muted-foreground/70 font-mono border border-border/30 dark:border-zinc-700/30">/{page.slug}</code>
             </div>
@@ -273,157 +277,235 @@ export default function EditPagePage({ params: paramsPromise }) {
           </div>
         )}
 
-        {/* ── Action Controls ── */}
-        <div className="flex flex-wrap items-center gap-3 px-1">
+        {/* ── Tab Navigation ── */}
+        <div className="flex flex-wrap items-center gap-3 px-1 border-b border-border/30 dark:border-zinc-800/50 pb-4">
           <Button
-            onClick={() => setShowCreateModal(true)}
-            className="w-full sm:w-44 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-xl font-bold transition-all hover:bg-emerald-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
+            onClick={() => setActiveTab("general")}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "general"
+                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg shadow-black/10"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted dark:bg-zinc-900/50"
+              }`}
+          >
+            <Settings className="w-4 h-4" />
+            General Info
+          </Button>
+          <Button
+            onClick={() => setActiveTab("models")}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "models"
+                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+              }`}
           >
             <Layers className="w-4 h-4" />
             Content Model
           </Button>
+
           <Button
             onClick={() => navigateGuarded(`/admin/pages/${page.slug}/content`)}
-            className="w-full sm:w-44 flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-xl font-bold transition-all hover:bg-blue-500/20 hover:-translate-y-0.5 active:scale-95 h-auto text-sm"
+            className="px-6 py-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-xl font-bold transition-all hover:bg-blue-500/20 text-sm h-auto flex items-center gap-2"
           >
             <FileText className="w-4 h-4" />
-            Content
+            Manage Content
           </Button>
         </div>
 
-        {/* ── Models Table ── */}
-        <div className="bg-card dark:bg-zinc-900/50 rounded-2xl shadow-sm border border-border/50 dark:border-zinc-800/60 overflow-hidden">
-          <div className="px-6 py-4 border-b border-border/40 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 flex justify-between items-center">
-            <h2 className="text-base font-bold text-foreground">Registered Models</h2>
-            <span className="px-2.5 py-1 bg-muted/50 dark:bg-zinc-800/60 text-muted-foreground/60 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-border/40 dark:border-zinc-700/40">
-              {page.sections.length} Sections
-            </span>
-          </div>
-
-          {page.sections.length === 0 ? (
-            <div className="p-16 text-center flex flex-col items-center justify-center">
-              <div className="w-20 h-20 bg-muted/40 dark:bg-zinc-800/40 border border-border/30 dark:border-zinc-700/30 rounded-2xl flex items-center justify-center mb-6">
-                <Layers className="w-10 h-10 text-muted-foreground/30" />
-              </div>
-              <p className="text-foreground/70 text-lg font-bold">No Content Models Yet</p>
-              <p className="text-muted-foreground/50 mt-2 max-w-xs mx-auto text-sm">Create a content model to define the structure of your page sections.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
-                  <tr>
-                    {["Structure", "Identifier", "Status", "Actions"].map((h, i) => (
-                      <th key={h} className={`px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ${i === 3 ? "text-right" : i === 2 ? "text-center" : ""}`}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
-                  {page.sections.map((section) => (
-                    <tr
-                      key={section._id}
-                      className={`hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer group ${activeSection === section._id ? "bg-blue-500/5 dark:bg-blue-500/5" : ""}`}
-                      onClick={() => setActiveSection(section._id)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground text-sm">{section.title}</span>
-                          <span className="text-xs text-muted-foreground/50 mt-0.5">{section.fields.length} Input Fields</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <code className="text-[10px] bg-muted/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md text-muted-foreground/70 font-mono italic border border-border/30 dark:border-zinc-700/30">{section.apiIdentifier}</code>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${section.fields.length === 0
-                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                          }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${section.fields.length === 0 ? "bg-amber-500" : "bg-emerald-500"}`} />
-                          {section.fields.length === 0 ? "Needs Fields" : "Ready"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-1.5 items-center">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setSectionToEdit(section._id); setShowFieldModal(true); }}
-                            className="px-4 py-2 bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/20 transition-all border border-blue-500/20"
-                          >
-                            Manage
-                          </button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => { e.stopPropagation(); handleDeleteSection(section._id); }}
-                            className="w-8 h-8 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
-                            title="Delete Section"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* ── Section Detail Panel ── */}
-        {currentSection && (
-          <div className="bg-card dark:bg-zinc-900/50 rounded-2xl shadow-sm border border-border/50 dark:border-zinc-800/60 overflow-hidden animate-in fade-in slide-in-from-bottom-4">
-            <div className="px-6 py-4 border-b border-border/40 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
-                  <Layers className="w-5 h-5" />
+        {/* ── View Content ── */}
+        {activeTab === "general" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-card dark:bg-zinc-900/50 rounded-3xl p-8 border border-border/50 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20" />
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
+                  <Settings className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">{currentSection.title}</h2>
-                  <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest mt-0.5">
-                    API: <span className="text-muted-foreground/70 font-mono lowercase">{currentSection.apiIdentifier}</span>
-                  </p>
+                  <h2 className="text-xl font-extrabold text-foreground tracking-tight">General Information</h2>
+                  <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest mt-0.5">Basic page configuration</p>
                 </div>
               </div>
-              <Button
-                onClick={() => { setSectionToEdit(currentSection._id); setShowFieldModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-bold text-sm transition-all shadow-sm h-auto"
-              >
-                <Plus className="w-4 h-4" />
-                Add Field
-              </Button>
+
+              <div className="grid gap-8 max-w-3xl">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">Page Title</label>
+                  <input
+                    type="text"
+                    value={page.title || ""}
+                    onChange={(e) => { setPage({ ...page, title: e.target.value }); setHasChanges(true); }}
+                    placeholder="Enter page title..."
+                    className={modalInp}
+                  />
+                  <p className="text-[10px] text-muted-foreground/40 italic ml-1">The title displayed in the admin dashboard and used for SEO.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">Description</label>
+                  <textarea
+                    value={page.description || ""}
+                    onChange={(e) => { setPage({ ...page, description: e.target.value }); setHasChanges(true); }}
+                    rows="4"
+                    placeholder="Briefly describe the purpose of this page..."
+                    className={modalInp + " resize-none min-h-[120px]"}
+                  />
+                  <p className="text-[10px] text-muted-foreground/40 italic ml-1">Internal note about what this page represents.</p>
+                </div>
+              </div>
             </div>
-            <div className="p-6">
-              {currentSection.fields.length === 0 ? (
-                <div className="py-12 border-2 border-dashed border-border/40 dark:border-zinc-700/40 rounded-2xl flex flex-col items-center justify-center text-center">
-                  <p className="text-muted-foreground/50 text-sm font-medium mb-1">No schema defined for this section</p>
-                  <p className="text-muted-foreground/30 text-xs">Add fields like text, image, or numbers to build the model.</p>
+          </div>
+        )}
+
+        {activeTab === "models" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* ── Models Table ── */}
+            <div className="bg-card dark:bg-zinc-900/50 rounded-2xl shadow-sm border border-border/50 dark:border-zinc-800/60 overflow-hidden">
+              <div className="px-6 py-4 border-b border-border/40 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-bold text-foreground">Registered Models</h2>
+                  <span className="px-2.5 py-1 bg-muted/50 dark:bg-zinc-800/60 text-muted-foreground/60 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-border/40 dark:border-zinc-700/40">
+                    {page.sections.length} Sections
+                  </span>
+                </div>
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-bold text-xs transition-all shadow-sm flex items-center gap-2 h-auto"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add New Model
+                </Button>
+              </div>
+
+              {page.sections.length === 0 ? (
+                <div className="p-20 text-center flex flex-col items-center justify-center">
+                  <div className="w-20 h-20 bg-muted/40 dark:bg-zinc-800/40 border border-border/30 dark:border-zinc-700/30 rounded-3xl flex items-center justify-center mb-6 text-muted-foreground/20">
+                    <Layers className="w-10 h-10" />
+                  </div>
+                  <p className="text-foreground/70 text-lg font-bold tracking-tight">No Content Models Yet</p>
+                  <p className="text-muted-foreground/50 mt-2 max-w-xs mx-auto text-sm mb-8">Create your first content model to define the structure of your page sections.</p>
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-8 py-3 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/90 font-bold text-sm transition-all shadow-xl shadow-primary/20 flex items-center gap-2 h-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Initialize First Model
+                  </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {currentSection.fields.map((field) => (
-                    <div
-                      key={field._id}
-                      className="group flex flex-col p-4 bg-card dark:bg-zinc-800/40 border border-border/40 dark:border-zinc-700/40 rounded-xl hover:border-blue-400/40 dark:hover:border-blue-600/40 transition-all shadow-sm hover:shadow-md relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 left-0 w-1 h-full bg-transparent group-hover:bg-blue-400 transition-all" />
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
-                          {field.type}
-                        </span>
-                        {field.required && (
-                          <span className="text-[10px] bg-destructive/10 text-destructive dark:text-red-400 font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter border border-destructive/20">
-                            Required
-                          </span>
-                        )}
-                      </div>
-                      <p className="font-bold text-foreground text-sm truncate">{field.label}</p>
-                      <p className="font-mono text-[10px] text-muted-foreground/50 mt-1">{field.name}</p>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
+                      <tr>
+                        {["Structure", "Identifier", "Status", "Actions"].map((h, i) => (
+                          <th key={h} className={`px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ${i === 3 ? "text-right" : i === 2 ? "text-center" : ""}`}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
+                      {page.sections.map((section) => (
+                        <tr
+                          key={section._id}
+                          className={`hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer group ${activeSection === section._id ? "bg-blue-500/5 dark:bg-blue-500/5" : ""}`}
+                          onClick={() => setActiveSection(section._id)}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-foreground text-sm">{section.title}</span>
+                              <span className="text-xs text-muted-foreground/50 mt-0.5">{section.fields.length} Input Fields</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <code className="text-[10px] bg-muted/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md text-muted-foreground/70 font-mono italic border border-border/30 dark:border-zinc-700/30">{section.apiIdentifier}</code>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${section.fields.length === 0
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${section.fields.length === 0 ? "bg-amber-500" : "bg-emerald-500"}`} />
+                              {section.fields.length === 0 ? "Needs Fields" : "Ready"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-1.5 items-center">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSectionToEdit(section._id); setShowFieldModal(true); }}
+                                className="px-4 py-2 bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/20 transition-all border border-blue-500/20"
+                              >
+                                Manage
+                              </button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteSection(section._id); }}
+                                className="w-8 h-8 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                                title="Delete Section"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
+
+            {/* ── Section Detail Panel ── */}
+            {currentSection && (
+              <div className="bg-card dark:bg-zinc-900/50 rounded-2xl shadow-sm border border-border/50 dark:border-zinc-800/60 overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+                <div className="px-6 py-4 border-b border-border/40 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">{currentSection.title}</h2>
+                      <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest mt-0.5">
+                        API: <span className="text-muted-foreground/70 font-mono lowercase">{currentSection.apiIdentifier}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => { setSectionToEdit(currentSection._id); setShowFieldModal(true); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-bold text-sm transition-all shadow-sm h-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Field
+                  </Button>
+                </div>
+                <div className="p-6">
+                  {currentSection.fields.length === 0 ? (
+                    <div className="py-12 border-2 border-dashed border-border/40 dark:border-zinc-700/40 rounded-2xl flex flex-col items-center justify-center text-center">
+                      <p className="text-muted-foreground/50 text-sm font-medium mb-1">No schema defined for this section</p>
+                      <p className="text-muted-foreground/30 text-xs">Add fields like text, image, or numbers to build the model.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {currentSection.fields.map((field) => (
+                        <div
+                          key={field._id}
+                          className="group flex flex-col p-4 bg-card dark:bg-zinc-800/40 border border-border/40 dark:border-zinc-700/40 rounded-xl hover:border-blue-400/40 dark:hover:border-blue-600/40 transition-all shadow-sm hover:shadow-md relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 left-0 w-1 h-full bg-transparent group-hover:bg-blue-400 transition-all" />
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+                              {field.type}
+                            </span>
+                            {field.required && (
+                              <span className="text-[10px] bg-destructive/10 text-destructive dark:text-red-400 font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter border border-destructive/20">
+                                Required
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-bold text-foreground text-sm truncate">{field.label}</p>
+                          <p className="font-mono text-[10px] text-muted-foreground/50 mt-1">{field.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
