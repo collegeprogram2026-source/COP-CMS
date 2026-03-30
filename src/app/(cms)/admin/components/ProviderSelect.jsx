@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
 
 export default function ProviderSelect({ value, onChange, required = false }) {
   const [providers, setProviders] = useState([]);
@@ -9,7 +8,7 @@ export default function ProviderSelect({ value, onChange, required = false }) {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await callApi("/api/admin/providers", { cache: "no-store", auth: true });
+        const res = await fetch("/api/admin/providers", { cache: "no-store" });
         const data = await res.json();
         setProviders(data);
       } catch (err) {
@@ -26,7 +25,7 @@ export default function ProviderSelect({ value, onChange, required = false }) {
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       required={required}
-      className="border px-3 py-2 rounded-md w-full bg-white"
+      className="border px-3 py-2 rounded-md w-full bg-card"
     >
       <option value="">Select Provider</option>
       {providers.map((p) => (
@@ -37,3 +36,4 @@ export default function ProviderSelect({ value, onChange, required = false }) {
     </select>
   );
 }
+

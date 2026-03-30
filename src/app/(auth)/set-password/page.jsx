@@ -55,9 +55,9 @@ function SetPasswordInner() {
   }
 
   const inp =
-    "w-full border-2 border-slate-300 bg-white px-3 py-2.5 rounded-lg text-sm text-slate-800 " +
-    "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 " +
-    "placeholder-slate-400 transition-colors hover:border-slate-400"
+    "w-full border-2 border-border bg-card px-3 py-2.5 rounded-lg text-sm text-foreground " +
+    "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-border " +
+    "placeholder:text-muted-foreground transition-colors hover:border-border"
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -85,8 +85,8 @@ function SetPasswordInner() {
         {/* Brand */}
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center">
-              <span className="text-slate-900 font-bold text-sm">C</span>
+            <div className="w-9 h-9 rounded-xl bg-card flex items-center justify-center">
+              <span className="text-foreground font-bold text-sm">C</span>
             </div>
             <span className="text-white font-bold text-lg tracking-wide">COP CMS</span>
           </div>
@@ -105,55 +105,55 @@ function SetPasswordInner() {
 
         {/* Bottom dots */}
         <div className="relative z-10 flex gap-2">
-          <div className="w-2 h-2 rounded-full bg-white/60" />
-          <div className="w-2 h-2 rounded-full bg-white/20" />
-          <div className="w-2 h-2 rounded-full bg-white/20" />
+          <div className="w-2 h-2 rounded-full bg-card/60" />
+          <div className="w-2 h-2 rounded-full bg-card/20" />
+          <div className="w-2 h-2 rounded-full bg-card/20" />
         </div>
       </div>
 
       {/* ── Right panel — form ── */}
-      <div className="flex-1 flex items-center justify-center bg-slate-50 px-6 py-12">
+      <div className="flex-1 flex items-center justify-center bg-muted px-6 py-12">
         <div className="w-full max-w-sm">
 
           {/* Mobile brand */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-white font-bold text-xs">C</span>
             </div>
-            <span className="text-slate-800 font-bold">COP CMS</span>
+            <span className="text-foreground font-bold">COP CMS</span>
           </div>
 
           {/* Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
 
             {/* Card header */}
-            <div className="bg-slate-800 px-6 py-5">
+            <div className="bg-primary px-6 py-5">
               <h2 className="text-white font-semibold text-base tracking-wide">🔐 Set Password</h2>
-              <p className="text-slate-400 text-xs mt-1">Create a password to finalize your account</p>
+              <p className="text-muted-foreground text-xs mt-1">Create a password to finalize your account</p>
             </div>
 
             <div className="p-6">
               {success ? (
                 <div className="text-center py-8">
-                  <div className="w-14 h-14 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-emerald-600 text-2xl">✓</span>
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-emerald-500 text-2xl">✓</span>
                   </div>
-                  <p className="text-slate-800 font-semibold">Password set successfully!</p>
-                  <p className="text-xs text-slate-400 mt-2">Redirecting to login...</p>
+                  <p className="text-foreground font-semibold">Password set successfully!</p>
+                  <p className="text-xs text-muted-foreground mt-2">Redirecting to login...</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
 
                   {/* Email */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Email
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={inp + " bg-slate-50 text-slate-500"}
+                      className={inp + " bg-muted text-muted-foreground"}
                       required
                       readOnly
                     />
@@ -161,7 +161,7 @@ function SetPasswordInner() {
 
                   {/* Password */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Password
                     </label>
                     <input
@@ -176,7 +176,7 @@ function SetPasswordInner() {
 
                   {/* Confirm */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Confirm Password
                     </label>
                     <input
@@ -191,8 +191,8 @@ function SetPasswordInner() {
 
                   {/* Error */}
                   {error && (
-                    <div className="p-3 bg-red-50 border-2 border-red-200 rounded-lg">
-                      <p className="text-xs text-red-700 font-medium">⚠ {error}</p>
+                    <div className="p-3 bg-rose-500/10 border-2 border-rose-500/20 rounded-lg">
+                      <p className="text-xs text-rose-500 font-medium">⚠ {error}</p>
                     </div>
                   )}
 
@@ -201,7 +201,7 @@ function SetPasswordInner() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-slate-800 text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-slate-700 disabled:opacity-50 transition-colors"
+                      className="w-full bg-primary text-white rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-50 transition-colors"
                     >
                       {loading ? "Setting password..." : "Set Password →"}
                     </button>
@@ -212,7 +212,7 @@ function SetPasswordInner() {
             </div>
           </div>
 
-          <p className="text-xs text-slate-400 text-center mt-6">
+          <p className="text-xs text-muted-foreground text-center mt-6">
             Having trouble? Contact your admin.
           </p>
         </div>
@@ -225,8 +225,8 @@ function SetPasswordInner() {
 export default function SetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="fixed inset-0 bg-slate-50 flex items-center justify-center">
-        <p className="text-sm text-slate-400">Loading...</p>
+      <div className="fixed inset-0 bg-muted flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     }>
       <SetPasswordInner />

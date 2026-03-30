@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { callApi } from "@/lib/apiClient"
+
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState([])
   const [filteredReviews, setFilteredReviews] = useState([])
@@ -80,7 +82,7 @@ export default function ReviewsPage() {
     try {
       const res = await callApi(`/api/admin/reviews/${id}`, {
         method: "DELETE",
-        auth: true
+        auth: true,
       })
       if (!res.ok) throw new Error("Failed to delete review")
       fetchReviews()
@@ -90,134 +92,134 @@ export default function ReviewsPage() {
   }
 
   return (
-    <div className="flex">
-      <div className="flex-1 p-8 bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Reviews Management</h1>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          {/* Filters */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Status
-                </label>
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Reviews</option>
-                  <option value="active">Active Only</option>
-                  <option value="inactive">Inactive Only</option>
-                </select>
-              </div>
-
-              {/* Provider Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Provider
-                </label>
-                <select
-                  value={selectedProvider}
-                  onChange={(e) => setSelectedProvider(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Providers</option>
-                  {providers.map((provider) => (
-                    <option key={provider._id} value={provider._id}>
-                      {provider.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+    <div className="min-h-screen bg-background pb-20">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Reviews Management</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-2">
+              Monitor and moderate user feedback across your providers
+            </p>
           </div>
 
-          {/* Reviews Table */}
+          <div className="flex flex-wrap items-center gap-3 bg-card p-1.5 rounded-2xl border border-border shadow-sm">
+            {/* Status Filter */}
+            <div className="flex items-center">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-3 mr-2">Status</span>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="bg-muted border-none text-xs font-bold text-foreground px-3 py-2 rounded-lg focus:ring-2 focus:ring-border outline-none transition-all cursor-pointer"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div className="w-px h-6 bg-muted hidden sm:block" />
+
+            {/* Provider Filter */}
+            <div className="flex items-center">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-2 mr-2">Provider</span>
+              <select
+                value={selectedProvider}
+                onChange={(e) => setSelectedProvider(e.target.value)}
+                className="bg-muted border-none text-xs font-bold text-foreground px-3 py-2 rounded-lg focus:ring-2 focus:ring-border outline-none transition-all cursor-pointer max-w-[150px]"
+              >
+                <option value="">All Providers</option>
+                {providers.map((provider) => (
+                  <option key={provider._id} value={provider._id}>
+                    {provider.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-rose-50 border border-rose-100 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-medium mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            {error}
+          </div>
+        )}
+
+        {/* Reviews Table */}
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden text-foreground">
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Loading reviews...</p>
+            <div className="text-center py-20">
+              <div className="w-10 h-10 border-[3px] border-border/50 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Loading Reviews</p>
             </div>
           ) : filteredReviews.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No reviews found</p>
+            <div className="text-center py-20">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 border border-border/50">
+                <span className="text-2xl">💬</span>
+              </div>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em]">No reviews found</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Reviewer
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Provider
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Rating
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Title
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Actions
-                    </th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-background border-b border-border/50">
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Reviewer</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Provider</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center">Rating</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Review Info</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-border/50">
                   {filteredReviews.map((review) => (
-                    <tr key={review._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div>
-                          <p className="font-medium">{review.name}</p>
-                          <p className="text-gray-500 text-xs">{review.email}</p>
+                    <tr key={review._id} className="group hover:bg-muted transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-foreground tracking-tight">{review.name}</span>
+                          <span className="text-[11px] font-medium text-muted-foreground tracking-tight">{review.email}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {review.providerId?.name || "—"}
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-lg border border-border/50">
+                          {review.providerId?.name || "Unknown"}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center">
-                          <span className="text-yellow-500">★</span>
-                          <span className="ml-1 font-semibold">{review.rating}/5</span>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center bg-amber-50 text-amber-600 px-2 py-1 rounded-lg border border-amber-100 w-fit mx-auto">
+                          <span className="text-xs">★</span>
+                          <span className="ml-1 text-xs font-bold">{review.rating}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="px-6 py-4">
                         <div className="max-w-xs">
-                          <p className="font-medium">{review.title}</p>
-                          <p className="text-gray-500 text-xs line-clamp-2">{review.comment}</p>
+                          <p className="text-sm font-bold text-foreground tracking-tight">{review.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 italic">"{review.comment}"</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <button
+                      <td className="px-6 py-4">
+                        <Button
                           onClick={() => toggleReviewStatus(review._id, review.isActive)}
-                          title="Click to toggle status"
-                          className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 ${review.isActive
-                            ? "bg-green-100 text-green-800 border border-green-200"
-                            : "bg-gray-100 text-gray-800 border border-gray-200"
+                          variant="ghost"
+                          size="sm"
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider transition-all hover:scale-105 active:scale-95 h-auto ${review.isActive
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                            : "bg-muted text-muted-foreground border-border"
                             }`}
                         >
                           {review.isActive ? "Active" : "Inactive"}
-                        </button>
+                        </Button>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <button
+                      <td className="px-6 py-4 text-right">
+                        <Button
                           onClick={() => deleteReview(review._id)}
-                          className="text-red-600 hover:text-red-800 font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs font-bold text-rose-500 hover:text-rose-700 transition-colors h-auto"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -225,24 +227,33 @@ export default function ReviewsPage() {
               </table>
             </div>
           )}
+        </div>
 
-          {/* Summary */}
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-gray-600 text-sm">Total Reviews</p>
-              <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
+        {/* Summary */}
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-3">Total Reviews</p>
+            <div className="flex items-end gap-2">
+              <p className="text-3xl font-bold text-foreground tracking-tighter">{reviews.length}</p>
+              <div className="mb-1.5 h-1.5 w-1.5 rounded-full bg-border" />
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-gray-600 text-sm">Active Reviews</p>
-              <p className="text-2xl font-bold text-green-600">
+          </div>
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-3 text-emerald-600/70">Active Reviews</p>
+            <div className="flex items-end gap-2">
+              <p className="text-3xl font-bold text-emerald-600 tracking-tighter">
                 {reviews.filter((r) => r.isActive).length}
               </p>
+              <div className="mb-1.5 h-1.5 w-1.5 rounded-full bg-emerald-200" />
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-gray-600 text-sm">Pending Approval</p>
-              <p className="text-2xl font-bold text-yellow-600">
+          </div>
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md transition-shadow">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-3 text-amber-600/70">Pending Approval</p>
+            <div className="flex items-end gap-2">
+              <p className="text-3xl font-bold text-amber-600 tracking-tighter">
                 {reviews.filter((r) => !r.isActive).length}
               </p>
+              <div className="mb-1.5 h-1.5 w-1.5 rounded-full bg-amber-200" />
             </div>
           </div>
         </div>
@@ -250,3 +261,4 @@ export default function ReviewsPage() {
     </div>
   )
 }
+

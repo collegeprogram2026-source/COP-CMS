@@ -1,16 +1,18 @@
 "use client";
 
 import ContentBuilder from "./ContentBuilder";
+import { Button } from "@/components/ui/button";
+import { Pencil, Plus } from "lucide-react";
 
 // ─── UI Helpers ───────────────────────────────────────────────────────
 
 function SectionHeader({ title }) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
         {title}
       </span>
-      <div className="flex-1 h-px bg-slate-200" />
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
@@ -18,30 +20,30 @@ function SectionHeader({ title }) {
 function Field({ label, children, span = 1, hint }) {
   return (
     <div className={`flex flex-col gap-1.5 col-span-${span}`}>
-      <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
         {label}
       </label>
       {children}
-      {hint && <span className="text-xs text-slate-400">{hint}</span>}
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </div>
   );
 }
 
 // ── Stronger input styles — visible border + dark placeholder ──────────
 const inp =
-  "border-2 border-slate-300 bg-white px-3 py-2.5 rounded-lg text-sm text-slate-800 " +
-  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 w-full " +
-  "placeholder-slate-400 transition-colors hover:border-slate-400";
+  "border-2 border-border bg-card px-3 py-2.5 rounded-lg text-sm text-foreground " +
+  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-border w-full " +
+  "placeholder-slate-400 transition-colors hover:border-border";
 
 const sel =
-  "border-2 border-slate-300 bg-white px-3 py-2.5 rounded-lg text-sm text-slate-800 " +
-  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 w-full " +
-  "transition-colors hover:border-slate-400";
+  "border-2 border-border bg-card px-3 py-2.5 rounded-lg text-sm text-foreground " +
+  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-border w-full " +
+  "transition-colors hover:border-border";
 
 const ta =
-  "border-2 border-slate-300 bg-white px-3 py-2.5 rounded-lg text-sm text-slate-800 " +
-  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 w-full " +
-  "resize-none placeholder-slate-400 transition-colors hover:border-slate-400";
+  "border-2 border-border bg-card px-3 py-2.5 rounded-lg text-sm text-foreground " +
+  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-border w-full " +
+  "resize-none placeholder-slate-400 transition-colors hover:border-border";
 
 // ─── Blog Form ──────────────────────────────────────────────────────
 
@@ -54,21 +56,31 @@ export default function BlogForm({
   onCancel,
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
 
       {/* Header */}
-      <div className="bg-slate-800 px-6 py-4 flex items-center justify-between">
-        <h2 className="text-white font-semibold text-sm tracking-wide">
-          {submitLabel === "Update Blog" ? "✏️ Edit Blog" : "➕ New Blog"}
+      <div className="bg-primary px-6 py-4 flex items-center justify-between">
+        <h2 className="text-white font-semibold text-sm tracking-wide flex items-center gap-2">
+          {submitLabel === "Update Blog" ? (
+            <>
+              <Pencil className="w-3.5 h-3.5" /> Edit Blog
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" /> New Blog
+            </>
+          )}
         </h2>
         {onCancel && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onCancel}
-            className="text-slate-400 hover:text-white text-sm transition-colors"
+            className="text-muted-foreground hover:text-white text-sm transition-colors h-auto"
           >
             Cancel
-          </button>
+          </Button>
         )}
       </div>
 
@@ -115,7 +127,7 @@ export default function BlogForm({
                       .replace(/[^\w-]+/g, ""),
                   })
                 }
-                className={inp + " font-mono bg-slate-50"}
+                className={inp + " font-mono bg-muted"}
               />
             </Field>
 
@@ -233,22 +245,24 @@ export default function BlogForm({
         </div>
 
         {/* ── SUBMIT ── */}
-        <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-          <button
+        <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+          <Button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"
+            className="px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-muted disabled:opacity-50 transition-colors h-auto"
           >
             {loading ? "Saving..." : submitLabel}
-          </button>
+          </Button>
           {onCancel && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={onCancel}
-              className="px-4 py-2.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+              className="px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors h-auto"
             >
               Cancel
-            </button>
+            </Button>
           )}
         </div>
 
@@ -256,3 +270,4 @@ export default function BlogForm({
     </div>
   );
 }
+

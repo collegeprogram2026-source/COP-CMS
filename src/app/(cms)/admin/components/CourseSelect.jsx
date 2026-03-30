@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
 
 export default function CourseSelect({
   value,
@@ -13,12 +12,12 @@ export default function CourseSelect({
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const res = await callApi("/api/admin/courses", {
+      const res = await fetch("/api/admin/courses", {
         cache: "no-store",
-        auth: true,
       });
       const data = await res.json();
-      setCourses(data.filter((c) => c.isActive)); // Only show active courses
+      const courseArray = Array.isArray(data) ? data : [];
+      setCourses(courseArray.filter((c) => c.isActive)); // Only show active courses
     };
 
     fetchCourses();
@@ -26,8 +25,8 @@ export default function CourseSelect({
 
   const finalList = degreeTypeId
     ? courses.filter((c) =>
-        c.degreeTypeId?._id === degreeTypeId || c.degreeTypeId === degreeTypeId
-      )
+      c.degreeTypeId?._id === degreeTypeId || c.degreeTypeId === degreeTypeId
+    )
     : courses;
 
   return (
@@ -35,15 +34,16 @@ export default function CourseSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       required={required}
-      className="border px-3 py-2 rounded-md w-full bg-white"
+      className="w-full border border-border/50 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none bg-background text-foreground"
     >
-      <option value="">Select Course</option>
+      <option value="" className="bg-background text-foreground">Select Course</option>
 
       {finalList.map((course) => (
-        <option key={course._id} value={course._id}>
+        <option key={course._id} value={course._id} className="bg-background text-foreground">
           {course.name}
         </option>
       ))}
     </select>
   );
 }
+

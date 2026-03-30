@@ -1,4 +1,4 @@
-import AdminSidebar from "./components/AdminSidebar"
+import AdminLayoutClient from "./components/AdminLayoutClient"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
@@ -11,11 +11,8 @@ export default async function AdminLayout({ children }) {
   }
 
   return (
-    <div className="flex bg-gray-100 min-h-screen">
-      <AdminSidebar />
-      <main className="flex-1 ml-64 p-8">
-        {children}
-      </main>
-    </div>
+    <AdminLayoutClient>
+      {children}
+    </AdminLayoutClient>
   )
 }

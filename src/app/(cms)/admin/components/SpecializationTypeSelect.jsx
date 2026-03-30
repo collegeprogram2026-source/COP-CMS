@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
 
 export default function SpecializationTypeSelect({
   value,
@@ -13,9 +12,8 @@ export default function SpecializationTypeSelect({
   useEffect(() => {
     const fetchSpecializationTypes = async () => {
       try {
-        const res = await callApi("/api/admin/specialization-types", {
+        const res = await fetch("/api/admin/specialization-types", {
           cache: "no-store",
-          auth: true,
         });
 
         const data = await res.json();
@@ -33,7 +31,7 @@ export default function SpecializationTypeSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       required={required}
-      className="border px-3 py-2 rounded-md w-full bg-white"
+      className="border px-3 py-2 rounded-md w-full bg-card"
     >
       <option value="">Select Specialization Type</option>
 

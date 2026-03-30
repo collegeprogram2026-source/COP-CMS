@@ -1,7 +1,19 @@
 "use client"
 import { SignIn } from "@clerk/nextjs"
+import { dark } from "@clerk/themes"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 export default function LoginPage() {
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDark = mounted && theme === "dark"
+
   return (
     <div className="fixed inset-0 z-50 flex">
 
@@ -37,8 +49,8 @@ export default function LoginPage() {
         {/* Brand */}
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg">
-              <span className="text-slate-900 font-black text-sm">C</span>
+            <div className="w-10 h-10 rounded-xl bg-card flex items-center justify-center shadow-lg">
+              <span className="text-foreground font-black text-sm">C</span>
             </div>
             <div>
               <p className="text-white font-bold text-base leading-none">COP CMS</p>
@@ -65,7 +77,7 @@ export default function LoginPage() {
             {["📝 Blogs", "🎓 Courses", "👤 Experts", "📊 Leads"].map((item) => (
               <span
                 key={item}
-                className="text-xs text-white/50 border border-white/10 rounded-full px-3 py-1.5 bg-white/5"
+                className="text-xs text-white/50 border border-white/10 rounded-full px-3 py-1.5 bg-card/5"
               >
                 {item}
               </span>
@@ -76,16 +88,16 @@ export default function LoginPage() {
         {/* Bottom */}
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex gap-2">
-            <div className="w-6 h-1.5 rounded-full bg-white/60" />
-            <div className="w-2 h-1.5 rounded-full bg-white/20" />
-            <div className="w-2 h-1.5 rounded-full bg-white/20" />
+            <div className="w-6 h-1.5 rounded-full bg-card/60" />
+            <div className="w-2 h-1.5 rounded-full bg-card/20" />
+            <div className="w-2 h-1.5 rounded-full bg-card/20" />
           </div>
           <p className="text-white/20 text-xs">© 2026 COP CMS</p>
         </div>
       </div>
 
       {/* ── Right panel — form ── */}
-      <div className="flex-1 flex items-center justify-center bg-slate-50 px-6 py-12 relative">
+      <div className="flex-1 flex items-center justify-center bg-muted px-6 py-12 relative">
 
         {/* Subtle bg pattern */}
         <div className="absolute inset-0 opacity-[0.015]"
@@ -98,16 +110,16 @@ export default function LoginPage() {
 
           {/* Mobile brand */}
           <div className="flex items-center gap-2.5 lg:hidden self-start">
-            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-white font-bold text-xs">C</span>
             </div>
-            <span className="text-slate-800 font-bold">COP CMS</span>
+            <span className="text-foreground font-bold">COP CMS</span>
           </div>
 
           {/* Heading above card */}
           <div className="self-start w-full">
-            <h1 className="text-2xl font-bold text-slate-800">Welcome back</h1>
-            <p className="text-sm text-slate-400 mt-1">Sign in to your admin account</p>
+            <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
+            <p className="text-sm text-muted-foreground mt-1">Sign in to your admin account</p>
           </div>
 
           {/* Clerk SignIn */}
@@ -116,31 +128,32 @@ export default function LoginPage() {
             signUpUrl="/login"
             redirectUrl="/admin"
             appearance={{
+              baseTheme: isDark ? dark : undefined,
               elements: {
                 rootBox: "w-full",
-                card: "w-full shadow-sm border-2 border-slate-200 rounded-2xl overflow-hidden p-0",
+                card: "w-full shadow-sm border-2 border-border rounded-2xl overflow-hidden p-0",
                 cardBox: "w-full",
                 header: "px-6 pt-6 pb-0",
-                headerTitle: "text-slate-800 font-bold text-base",
-                headerSubtitle: "text-slate-400 text-xs",
+                headerTitle: "text-foreground font-bold text-base",
+                headerSubtitle: "text-muted-foreground text-xs",
                 socialButtonsBlockButton:
-                  "border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-lg transition-colors",
-                socialButtonsBlockButtonText: "font-semibold text-sm text-slate-700",
-                dividerLine: "bg-slate-200",
-                dividerText: "text-slate-400 text-xs font-medium",
+                  "border-2 border-border hover:border-border hover:bg-muted text-foreground font-semibold text-sm rounded-lg transition-colors",
+                socialButtonsBlockButtonText: "font-semibold text-sm text-foreground",
+                dividerLine: "bg-border",
+                dividerText: "text-muted-foreground text-xs font-medium",
                 formFieldLabel:
-                  "text-xs font-semibold text-slate-600 uppercase tracking-wide",
+                  "text-xs font-semibold text-muted-foreground uppercase tracking-wide",
                 formFieldInput:
-                  "border-2 border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-slate-400 hover:border-slate-400 transition-colors w-full",
+                  "border-2 border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-border hover:border-border transition-colors w-full",
                 formButtonPrimary:
-                  "bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-lg py-2.5 transition-colors w-full",
-                footerActionText: "text-slate-400 text-xs",
+                  "bg-primary hover:bg-muted text-white text-sm font-semibold rounded-lg py-2.5 transition-colors w-full",
+                footerActionText: "text-muted-foreground text-xs",
                 footerActionLink:
-                  "text-slate-700 font-semibold hover:text-slate-900 text-xs",
-                identityPreviewText: "text-slate-700 text-sm",
+                  "text-foreground font-semibold hover:text-foreground text-xs",
+                identityPreviewText: "text-foreground text-sm",
                 identityPreviewEditButton:
-                  "text-slate-500 hover:text-slate-700 text-xs",
-                alertText: "text-red-700 text-xs font-medium",
+                  "text-muted-foreground hover:text-foreground text-xs",
+                alertText: "text-rose-500 text-xs font-medium",
                 formFieldErrorText: "text-red-600 text-xs",
                 footer: "px-6 pb-6",
                 main: "px-6 py-4",
@@ -151,9 +164,9 @@ export default function LoginPage() {
             }}
           />
 
-          <p className="text-xs text-slate-400 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Having trouble signing in?{" "}
-            <span className="text-slate-600 font-semibold cursor-pointer hover:text-slate-800 transition-colors">
+            <span className="text-muted-foreground font-semibold cursor-pointer hover:text-foreground transition-colors">
               Contact your admin
             </span>
           </p>

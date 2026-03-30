@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { callApi } from "@/lib/apiClient";
 
 export default function SpecializationSelect({
   value,
@@ -12,24 +11,18 @@ export default function SpecializationSelect({
   const [specializations, setSpecializations] = useState([]);
 
   useEffect(() => {
-    if (!courseId) {
-      setSpecializations([]);
-      return;
-    }
+    if (!courseId) return;   // 🚀 Just return, don't set state here
 
     const fetchSpecializations = async () => {
       try {
-        const res = await callApi(
-          `/api/admin/specializations?courseId=${courseId}`,
-          { cache: "no-store", auth: true }
+        const res = await fetch(
+          `/api/admin/specialization?courseId=${courseId}`,
+          { cache: "no-store" }
         );
 
-        if (res.ok) {
-          const data = await res.json();
-          setSpecializations(Array.isArray(data) ? data : []);
-        } else {
-          setSpecializations([]);
-        }
+        const data = await res.json();
+
+        setSpecializations(data);
       } catch (err) {
         console.error("Error fetching specializations:", err);
         setSpecializations([]);
@@ -47,7 +40,7 @@ export default function SpecializationSelect({
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       required={required}
-      className="border px-3 py-2 rounded-md w-full bg-white"
+      className="border px-3 py-2 rounded-md w-full bg-card"
     >
       <option value="">Select Specialization</option>
 

@@ -1,30 +1,32 @@
 "use client";
 
 import TextBlock from "./TextBlock";
+import { Button } from "@/components/ui/button";
+import { Plus, FileText, Image as ImageIcon, Trash2 } from "lucide-react";
 
 // ─── Section Header ───────────────────────────────────────────────
 
 function SectionHeader({ title, count }) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
         {title}
       </span>
       {count !== undefined && (
-        <span className="text-xs bg-slate-200 text-slate-600 font-semibold rounded-full px-2 py-0.5">
+        <span className="text-xs bg-border text-muted-foreground font-semibold rounded-full px-2 py-0.5">
           {count}
         </span>
       )}
-      <div className="flex-1 h-px bg-slate-200" />
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
 
 // ── Stronger input — visible border + readable placeholder ────────
 const inp =
-  "border-2 border-slate-300 bg-white px-3 py-2.5 rounded-lg text-sm text-slate-800 " +
-  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 w-full " +
-  "placeholder-slate-400 transition-colors hover:border-slate-400";
+  "border-2 border-border bg-card px-3 py-2.5 rounded-lg text-sm text-foreground " +
+  "focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-border w-full " +
+  "placeholder-slate-400 transition-colors hover:border-border";
 
 // ─── Content Builder ───────────────────────────────────────────────
 
@@ -61,21 +63,23 @@ export default function ContentBuilder({ form, setForm }) {
 
       {/* ── Add Buttons ── */}
       <div className="flex gap-3 mb-6">
-        <button
+        <Button
           type="button"
           onClick={addTextBlock}
-          className="px-4 py-2 text-xs font-semibold text-slate-600 border-2 border-dashed border-slate-300 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors"
+          variant="outline"
+          className="px-4 py-2 text-xs font-semibold text-muted-foreground border-2 border-dashed border-border rounded-lg hover:border-border hover:bg-muted transition-colors h-auto flex items-center gap-2"
         >
-          + Add Text Block
-        </button>
+          <Plus className="w-4 h-4" /> Add Text Block
+        </Button>
 
-        <button
+        <Button
           type="button"
           onClick={addImageBlock}
-          className="px-4 py-2 text-xs font-semibold text-slate-600 border-2 border-dashed border-slate-300 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors"
+          variant="outline"
+          className="px-4 py-2 text-xs font-semibold text-muted-foreground border-2 border-dashed border-border rounded-lg hover:border-border hover:bg-muted transition-colors h-auto flex items-center gap-2"
         >
-          + Add Image Block
-        </button>
+          <Plus className="w-4 h-4" /> Add Image Block
+        </Button>
       </div>
 
       {/* ── Blocks ── */}
@@ -83,20 +87,30 @@ export default function ContentBuilder({ form, setForm }) {
         {form.content.map((block, index) => (
           <div
             key={index}
-            className="border-2 border-slate-200 rounded-xl overflow-hidden bg-white hover:border-slate-300 transition-colors"
+            className="border-2 border-border rounded-xl overflow-hidden bg-card hover:border-border transition-colors"
           >
             {/* Block Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b-2 border-slate-200">
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                📋 {block.type === "text" ? "Text Block" : "Image Block"}
-              </span>
-              <button
+            <div className="flex items-center justify-between px-4 py-3 bg-muted border-b-2 border-border">
+              <div className="flex items-center gap-2">
+                {block.type === "text" ? (
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                ) : (
+                  <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  {block.type === "text" ? "Text Block" : "Image Block"}
+                </span>
+              </div>
+              <Button
                 type="button"
                 onClick={() => removeBlock(index)}
-                className="text-sm text-red-500 hover:text-red-700 font-semibold px-3 py-1 rounded hover:bg-red-50 transition-colors"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-red-500 hover:text-rose-500 font-semibold px-3 py-1 rounded hover:bg-rose-500/10 transition-colors h-auto flex items-center gap-1.5"
               >
+                <Trash2 className="w-3.5 h-3.5" />
                 Remove
-              </button>
+              </Button>
             </div>
 
             {/* Block Content */}
@@ -124,10 +138,10 @@ export default function ContentBuilder({ form, setForm }) {
                     <img
                       src={block.value}
                       alt="Preview"
-                      className="rounded-lg max-h-60 object-cover border-2 border-slate-200"
+                      className="rounded-lg max-h-60 object-cover border-2 border-border"
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-24 rounded-lg border-2 border-dashed border-slate-300 bg-white text-slate-400 text-xs">
+                    <div className="flex items-center justify-center h-24 rounded-lg border-2 border-dashed border-border bg-card text-muted-foreground text-xs">
                       Image preview will appear here
                     </div>
                   )}
@@ -139,7 +153,7 @@ export default function ContentBuilder({ form, setForm }) {
 
         {/* Empty state */}
         {form.content.length === 0 && (
-          <div className="flex items-center justify-center h-24 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 text-xs">
+          <div className="flex items-center justify-center h-24 rounded-xl border-2 border-dashed border-border text-muted-foreground text-xs">
             No content blocks yet — add one above
           </div>
         )}
