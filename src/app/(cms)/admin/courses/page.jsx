@@ -327,6 +327,7 @@ export default function CoursesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
+                  <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">S.No.</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Course Name</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Identifier (Slug)</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Degree Type</th>
@@ -338,13 +339,18 @@ export default function CoursesPage() {
               <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
                 {courses.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-10 text-center text-muted-foreground italic">
+                    <td colSpan="6" className="px-6 py-10 text-center text-muted-foreground italic">
                       No courses found matching your criteria.
                     </td>
                   </tr>
                 ) : (
-                  courses.map((course) => (
+                  courses.map((course, index) => (
                     <tr key={course._id} className="group hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors">
+                      {/* S.No. */}
+                      <td className="px-6 py-4 text-sm font-bold text-muted-foreground tracking-tight">
+                        {index + 1}
+                      </td>
+
                       {/* Name */}
                       <td className="px-6 py-4">
                         {editingId === course._id ? (

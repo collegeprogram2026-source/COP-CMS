@@ -436,10 +436,10 @@ export default function ProviderCoursesPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-zinc-50 dark:bg-zinc-800/50">
-                {["Title & Course", "Logistics", "Pricing", "Status", "Actions"].map((h, i) => (
+                {["S.No.", "Title & Course", "Logistics", "Pricing", "Status", "Actions"].map((h, i) => (
                   <th
                     key={h}
-                    className={`px-6 py-3.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ${i >= 3 ? "text-center" : ""} ${i === 4 ? "text-right" : ""}`}
+                    className={`px-6 py-3.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ${i >= 4 ? "text-center" : ""} ${i === 5 ? "text-right" : ""}`}
                   >
                     {h}
                   </th>
@@ -448,7 +448,7 @@ export default function ProviderCoursesPage() {
             </thead>
 
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {providerCourses.map((item) => (
+              {providerCourses.map((item, index) => (
                 <tr
                   key={item._id}
                   className="
@@ -457,6 +457,11 @@ export default function ProviderCoursesPage() {
                     group
                   "
                 >
+                  {/* S.No. */}
+                  <td className="px-6 py-4 text-sm font-bold text-zinc-500 dark:text-zinc-400">
+                    {index + 1}
+                  </td>
+
                   {/* Title & Course */}
                   <td className="px-6 py-4">
                     {editingId === item._id ? (

@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/apiClient";
-import { 
-  Layers, 
-  Plus, 
-  X, 
-  Pencil, 
-  Trash2, 
-  Save, 
-  Database, 
+import {
+  Layers,
+  Plus,
+  X,
+  Pencil,
+  Trash2,
+  Save,
+  Database,
   ChevronRight,
   Loader2,
   CheckCircle2,
@@ -179,7 +179,7 @@ export default function DegreeTypesPage() {
   return (
     <div className="min-h-screen bg-muted/20 dark:bg-zinc-950 pb-20 text-foreground transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 py-10">
-        
+
         {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
           <div>
@@ -318,11 +318,10 @@ export default function DegreeTypesPage() {
                 <Button
                   type="submit"
                   disabled={!formData.name.trim() || loading}
-                  className={`px-8 py-2.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-auto ${
-                    formData.name.trim() && !loading
+                  className={`px-8 py-2.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-auto ${formData.name.trim() && !loading
                       ? "bg-primary text-primary-foreground hover:bg-primary/90"
                       : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                  }`}
+                    }`}
                 >
                   {loading ? (
                     <>
@@ -343,7 +342,7 @@ export default function DegreeTypesPage() {
 
         {/* ── Table ── */}
         <div className="bg-card dark:bg-zinc-900/50 rounded-2xl border border-border/50 dark:border-zinc-800/60 shadow-sm dark:shadow-zinc-950/40 overflow-hidden text-foreground">
-          
+
           {/* Table header bar */}
           <div className="px-8 py-5 border-b border-border/40 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 flex items-center justify-between">
             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -359,12 +358,11 @@ export default function DegreeTypesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
-                  {["Name", "Slug", "Order", "Status", "Actions"].map((h, i) => (
+                  {["S.No.", "Name", "Slug", "Order", "Status", "Actions"].map((h, i) => (
                     <th
                       key={h}
-                      className={`px-8 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap ${
-                        i === 4 ? "text-right" : ""
-                      }`}
+                      className={`px-8 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap ${i === 5 ? "text-right" : ""
+                        }`}
                     >
                       {h}
                     </th>
@@ -373,11 +371,16 @@ export default function DegreeTypesPage() {
               </thead>
 
               <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
-                {degreeTypes.map((degree) => (
+                {degreeTypes.map((degree, index) => (
                   <tr
                     key={degree._id}
                     className="group hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors"
                   >
+                    {/* S.No. */}
+                    <td className="px-8 py-5 text-sm font-bold text-muted-foreground tracking-tight">
+                      {index + 1}
+                    </td>
+
                     {/* Name */}
                     <td className="px-8 py-5">
                       {editingId === degree._id ? (
@@ -462,18 +465,16 @@ export default function DegreeTypesPage() {
                         </label>
                       ) : (
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
-                            degree.isActive
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${degree.isActive
                               ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/20"
                               : "bg-zinc-500/10 text-zinc-600 border-zinc-500/20 dark:text-zinc-500 dark:border-zinc-700/20"
-                          }`}
+                            }`}
                         >
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              degree.isActive
+                            className={`w-1.5 h-1.5 rounded-full ${degree.isActive
                                 ? "bg-emerald-500 dark:bg-emerald-400"
                                 : "bg-zinc-500 dark:bg-zinc-500"
-                            }`}
+                              }`}
                           />
                           {degree.isActive ? "Active" : "Inactive"}
                         </span>
@@ -541,7 +542,7 @@ export default function DegreeTypesPage() {
               <p className="text-base font-bold text-foreground/70 mb-1">No Degree Types Found</p>
               <p className="text-sm text-muted-foreground/50 mb-6">Add a degree type to organize your academic programs.</p>
               {!showForm && (
-                <Button 
+                <Button
                   onClick={() => setShowForm(true)}
                   variant="outline"
                   className="rounded-xl px-6 border-dashed border-2 hover:border-primary hover:text-primary transition-all"

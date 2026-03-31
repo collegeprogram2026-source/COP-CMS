@@ -66,7 +66,7 @@ export default function EditPagePage({ params: paramsPromise }) {
   const [sectionToEdit, setSectionToEdit] = useState(null);
   const [toast, setToast] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("models");
   const router = useRouter();
 
   useEffect(() => { paramsPromise.then(setParams); }, [paramsPromise]);
@@ -247,7 +247,7 @@ export default function EditPagePage({ params: paramsPromise }) {
             <h1 className="text-xl font-extrabold tracking-tight text-foreground">{page.title}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest">
-                {activeTab === "general" ? "Page Settings" : "Architecture Editor"}
+                Architecture Editor
               </span>
               <span className="text-muted-foreground/30">•</span>
               <code className="text-xs bg-muted/50 dark:bg-zinc-800/60 px-2 py-0.5 rounded-md text-muted-foreground/70 font-mono border border-border/30 dark:border-zinc-700/30">/{page.slug}</code>
@@ -280,20 +280,10 @@ export default function EditPagePage({ params: paramsPromise }) {
         {/* ── Tab Navigation ── */}
         <div className="flex flex-wrap items-center gap-3 px-1 border-b border-border/30 dark:border-zinc-800/50 pb-4">
           <Button
-            onClick={() => setActiveTab("general")}
-            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "general"
-                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg shadow-black/10"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted dark:bg-zinc-900/50"
-              }`}
-          >
-            <Settings className="w-4 h-4" />
-            General Info
-          </Button>
-          <Button
             onClick={() => setActiveTab("models")}
             className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "models"
-                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg shadow-black/10"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted dark:bg-zinc-900/50"
               }`}
           >
             <Layers className="w-4 h-4" />
@@ -302,7 +292,7 @@ export default function EditPagePage({ params: paramsPromise }) {
 
           <Button
             onClick={() => navigateGuarded(`/admin/pages/${page.slug}/content`)}
-            className="px-6 py-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-xl font-bold transition-all hover:bg-blue-500/20 text-sm h-auto flex items-center gap-2"
+            className="px-6 py-2.5 bg-muted/50 text-muted-foreground hover:bg-muted dark:bg-zinc-900/50 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2"
           >
             <FileText className="w-4 h-4" />
             Manage Content
@@ -310,49 +300,6 @@ export default function EditPagePage({ params: paramsPromise }) {
         </div>
 
         {/* ── View Content ── */}
-        {activeTab === "general" && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-card dark:bg-zinc-900/50 rounded-3xl p-8 border border-border/50 dark:border-zinc-800/60 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/20" />
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
-                  <Settings className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-extrabold text-foreground tracking-tight">General Information</h2>
-                  <p className="text-[10px] text-muted-foreground/50 font-bold uppercase tracking-widest mt-0.5">Basic page configuration</p>
-                </div>
-              </div>
-
-              <div className="grid gap-8 max-w-3xl">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">Page Title</label>
-                  <input
-                    type="text"
-                    value={page.title || ""}
-                    onChange={(e) => { setPage({ ...page, title: e.target.value }); setHasChanges(true); }}
-                    placeholder="Enter page title..."
-                    className={modalInp}
-                  />
-                  <p className="text-[10px] text-muted-foreground/40 italic ml-1">The title displayed in the admin dashboard and used for SEO.</p>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ml-1">Description</label>
-                  <textarea
-                    value={page.description || ""}
-                    onChange={(e) => { setPage({ ...page, description: e.target.value }); setHasChanges(true); }}
-                    rows="4"
-                    placeholder="Briefly describe the purpose of this page..."
-                    className={modalInp + " resize-none min-h-[120px]"}
-                  />
-                  <p className="text-[10px] text-muted-foreground/40 italic ml-1">Internal note about what this page represents.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {activeTab === "models" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* ── Models Table ── */}

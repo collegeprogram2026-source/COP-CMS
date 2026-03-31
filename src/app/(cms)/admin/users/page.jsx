@@ -380,7 +380,7 @@ export default function UsersPage() {
         </div>
 
         {/* ── Activity Header & Filters ── */}
-        <div className="flex flex-col sm:flex-row justify-between items-end gap-5 mb-5">
+        <div className="flex flex-col justify-start items-start gap-4 mb-5">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">System Activity Logs</span>
             <div className="h-px w-8 bg-zinc-400 dark:bg-zinc-600 rounded-full" />
@@ -401,8 +401,8 @@ export default function UsersPage() {
                 className="bg-zinc-100 dark:bg-zinc-800 border-none text-xs font-semibold text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-zinc-400 outline-none transition-all cursor-pointer"
               >
                 <option value="">All Sections</option>
-                {Object.entries(SECTION_NAMES).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
+                {ACCESS_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
                 ))}
               </select>
             </div>
