@@ -216,13 +216,14 @@ export default function PageContentPage() {
       <div className="flex flex-col gap-6">
         {/* Header Navigation */}
         <div className="flex items-center gap-4">
-          <Link
-            href={`/admin/pages`}
+          <Button
+            onClick={() => router.push(`/admin/pages/${slug}`)}
+            variant="ghost"
             className="p-2 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
-            title="Back to Pages"
+            title="Back to Page Model"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-          </Link>
+          </Button>
           <div className="h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{page.title}</h1>

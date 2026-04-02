@@ -67,7 +67,7 @@ export default function EditPagePage({ params: paramsPromise }) {
   const [sectionToEdit, setSectionToEdit] = useState(null);
   const [toast, setToast] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("models");
   const [draggedSectionId, setDraggedSectionId] = useState(null);
   const router = useRouter();
 
@@ -311,16 +311,17 @@ export default function EditPagePage({ params: paramsPromise }) {
 
         {/* ── Tab Navigation ── */}
         <div className="flex flex-wrap items-center gap-3 px-1 border-b border-border/30 dark:border-zinc-800/50 pb-4">
-          <Button
-            onClick={() => setActiveTab("general")}
-            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "general"
-              ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg shadow-black/10"
-              : "bg-muted/50 text-muted-foreground hover:bg-muted dark:bg-zinc-900/50"
+          {/* <Button
+            onClick={() => setActiveTab("models")}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "models"
+              ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
               }`}
           >
-            <Settings className="w-4 h-4" />
-            General Info
-          </Button>
+            <Layers className="w-4 h-4" />
+            Content Model
+          </Button> */}
+
           <Button
             onClick={() => setActiveTab("models")}
             className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "models"
