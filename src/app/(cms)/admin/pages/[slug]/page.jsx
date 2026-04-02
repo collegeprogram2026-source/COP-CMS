@@ -30,6 +30,7 @@ import {
   PlusCircle,
   Layers,
   Settings,
+  GripVertical,
 } from "lucide-react";
 
 const FIELD_TYPES = [
@@ -66,7 +67,8 @@ export default function EditPagePage({ params: paramsPromise }) {
   const [sectionToEdit, setSectionToEdit] = useState(null);
   const [toast, setToast] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("models");
+  const [activeTab, setActiveTab] = useState("general");
+  const [draggedSectionId, setDraggedSectionId] = useState(null);
   const router = useRouter();
 
   useEffect(() => { paramsPromise.then(setParams); }, [paramsPromise]);
@@ -149,6 +151,35 @@ export default function EditPagePage({ params: paramsPromise }) {
     setHasChanges(true);
   };
 
+  const handleDragStart = (e, sectionId) => {
+    setDraggedSectionId(sectionId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e, targetSectionId) => {
+    e.preventDefault();
+    if (!draggedSectionId || draggedSectionId === targetSectionId) {
+      setDraggedSectionId(null);
+      return;
+    }
+
+    const draggedIndex = page.sections.findIndex((s) => s._id === draggedSectionId);
+    const targetIndex = page.sections.findIndex((s) => s._id === targetSectionId);
+
+    const newSections = [...page.sections];
+    const [draggedSection] = newSections.splice(draggedIndex, 1);
+    newSections.splice(targetIndex, 0, draggedSection);
+
+    setPage({ ...page, sections: newSections });
+    setHasChanges(true);
+    setDraggedSectionId(null);
+  };
+
   const handleSave = async () => {
     if (!page.title || !page.slug) { setError("Title and slug are required"); return; }
     setSaving(true);
@@ -160,7 +191,8 @@ export default function EditPagePage({ params: paramsPromise }) {
         body: {
           title: page.title,
           description: page.description,
-          sections: page.sections.map((section) => ({
+          sections: page.sections.map((section, index) => ({
+            sectionIndex: index,
             title: section.title,
             apiIdentifier: section.apiIdentifier || generateApiIdentifier(section.title),
             description: section.description,
@@ -280,10 +312,20 @@ export default function EditPagePage({ params: paramsPromise }) {
         {/* ── Tab Navigation ── */}
         <div className="flex flex-wrap items-center gap-3 px-1 border-b border-border/30 dark:border-zinc-800/50 pb-4">
           <Button
-            onClick={() => setActiveTab("models")}
-            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "models"
+            onClick={() => setActiveTab("general")}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "general"
               ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-lg shadow-black/10"
               : "bg-muted/50 text-muted-foreground hover:bg-muted dark:bg-zinc-900/50"
+              }`}
+          >
+            <Settings className="w-4 h-4" />
+            General Info
+          </Button>
+          <Button
+            onClick={() => setActiveTab("models")}
+            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 ${activeTab === "models"
+              ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
               }`}
           >
             <Layers className="w-4 h-4" />
@@ -340,18 +382,28 @@ export default function EditPagePage({ params: paramsPromise }) {
                   <table className="w-full text-left">
                     <thead className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
                       <tr>
-                        {["Structure", "Identifier", "Status", "Actions"].map((h, i) => (
-                          <th key={h} className={`px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ${i === 3 ? "text-right" : i === 2 ? "text-center" : ""}`}>{h}</th>
+                        {["", "Index", "Structure", "Identifier", "Status", "Actions"].map((h, i) => (
+                          <th key={h} className={`px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest ${i === 0 ? "w-12 text-center" : i === 5 ? "text-right" : i === 4 ? "text-center" : ""}`}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
-                      {page.sections.map((section) => (
+                      {page.sections.map((section, index) => (
                         <tr
                           key={section._id}
-                          className={`hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors cursor-pointer group ${activeSection === section._id ? "bg-blue-500/5 dark:bg-blue-500/5" : ""}`}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, section._id)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, section._id)}
+                          className={`hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors cursor-move group ${activeSection === section._id ? "bg-blue-500/5 dark:bg-blue-500/5" : ""} ${draggedSectionId === section._id ? "opacity-50 bg-primary/5" : ""}`}
                           onClick={() => setActiveSection(section._id)}
                         >
+                          <td className="px-6 py-4 w-12 text-center">
+                            <GripVertical className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary font-bold text-xs">{index}</span>
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="font-bold text-foreground text-sm">{section.title}</span>

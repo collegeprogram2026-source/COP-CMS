@@ -39,9 +39,10 @@ const EMPTY_FORM = {
   galleryDescription: null,
   galleryImages: [],
   isFeatured: false,
+  bestROI: false,
+  trending: false,
   isActive: "active",
   publicationStatus: "draft",
-  type: "University",
   averageRating: 0,
   reviewCount: 0,
   ratingBreakdown: {
@@ -324,13 +325,6 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               />
             </Field>
 
-            <Field label="Type" span={3}>
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className={sel}>
-                <option value="University">University</option>
-                <option value="Edtech">Edtech</option>
-                <option value="Platform">Platform</option>
-              </select>
-            </Field>
 
             <Field label="Short Excerpt" span={12} hint="Shown in listing cards">
               <textarea
@@ -356,11 +350,27 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               </select>
             </Field>
 
-            <Field label="Featured Flag" span={3}>
+            <Field label="Featured Flag" span={2}>
               <Toggle
                 checked={form.isFeatured}
                 onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
                 label="Featured"
+              />
+            </Field>
+
+            <Field label="Best ROI" span={2}>
+              <Toggle
+                checked={form.bestROI}
+                onChange={(e) => setForm({ ...form, bestROI: e.target.checked })}
+                label="Best ROI"
+              />
+            </Field>
+
+            <Field label="Trending" span={2}>
+              <Toggle
+                checked={form.trending}
+                onChange={(e) => setForm({ ...form, trending: e.target.checked })}
+                label="Trending"
               />
             </Field>
 
@@ -646,9 +656,10 @@ export default function ProvidersPage() {
       galleryDescription: item.galleryDescription || null,
       galleryImages: item.galleryImages || [],
       isFeatured: item.isFeatured || false,
+      bestROI: item.bestROI || false,
+      trending: item.trending || false,
       isActive: item.isActive === true ? "active" : item.isActive === false ? "inactive" : (item.isActive || "active"),
       publicationStatus: item.publicationStatus || "draft",
-      type: item.type || "University",
       averageRating: item.averageRating || 0,
       reviewCount: item.reviewCount || 0,
       ratingBreakdown: item.ratingBreakdown || { averageRating: 0, digitalInfrastructure: 0, curriculum: 0, valueForMoney: 0 },
@@ -784,7 +795,7 @@ export default function ProvidersPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
-                    {["S.No.", "Name", "Type", "Slug", "Excerpt", "Featured", "Status", "Active", "Actions"].map((h) => (
+                    {["S.No.", 'Name', 'Slug', 'Excerpt', 'Featured', 'Best ROI', 'Trending', 'Status', 'Active', 'Actions'].map((h) => (
                       <th key={h} className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">
                         {h}
                       </th>
@@ -796,9 +807,6 @@ export default function ProvidersPage() {
                     <tr key={item._id} className="hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors group">
                       <td className="px-6 py-4 text-sm font-bold text-muted-foreground tracking-tight">{index + 1}</td>
                       <td className="px-6 py-4 font-bold text-foreground whitespace-nowrap">{item.name}</td>
-                      <td className="px-6 py-4">
-                        <span className="text-muted-foreground/70 text-sm">{item.type || "—"}</span>
-                      </td>
                       <td className="px-6 py-4">
                         <code className="text-[10px] bg-muted/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md text-muted-foreground/70 font-mono italic border border-border/30 dark:border-zinc-700/30">/{item.slug}</code>
                       </td>
@@ -815,6 +823,24 @@ export default function ProvidersPage() {
                             <Star className="w-3.5 h-3.5" />
                           </span>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.bestROI
+                          ? "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20"
+                          : "bg-muted/50 dark:bg-zinc-800/50 text-muted-foreground/50 border border-border/40 dark:border-zinc-700/40"
+                          }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${item.bestROI ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-muted-foreground/30'}`}></span>
+                          {item.bestROI ? "Best ROI" : "-"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.trending
+                          ? "bg-cyan-500/10 dark:bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border border-cyan-500/20"
+                          : "bg-muted/50 dark:bg-zinc-800/50 text-muted-foreground/50 border border-border/40 dark:border-zinc-700/40"
+                          }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${item.trending ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-muted-foreground/30'}`}></span>
+                          {item.trending ? "Trending" : "-"}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.publicationStatus === "published"

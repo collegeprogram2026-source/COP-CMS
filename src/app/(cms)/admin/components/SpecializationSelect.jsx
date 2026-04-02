@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { callApi } from "@/lib/apiClient";
 
 export default function SpecializationSelect({
   value,
@@ -11,44 +12,62 @@ export default function SpecializationSelect({
   const [specializations, setSpecializations] = useState([]);
 
   useEffect(() => {
-    if (!courseId) return;   // 🚀 Just return, don't set state here
+    if (!courseId) {
+      setSpecializations([]);
+      return;
+    }
 
+    let cancelled = false;
     const fetchSpecializations = async () => {
       try {
-        const res = await fetch(
-          `/api/admin/specialization?courseId=${courseId}`,
-          { cache: "no-store" }
+        const res = await callApi(
+          `/api/admin/specializations?courseId=${encodeURIComponent(courseId)}`,
+          { cache: "no-store", auth: true }
         );
 
-        const data = await res.json();
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error("SpecializationSelect: failed to fetch specializations", { status: res.status, err });
+          if (!cancelled) setSpecializations([]);
+          return;
+        }
 
-        setSpecializations(data);
+        const data = await res.json();
+        if (!cancelled) setSpecializations(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Error fetching specializations:", err);
-        setSpecializations([]);
+        console.error("SpecializationSelect: error fetching specializations:", err);
+        if (!cancelled) setSpecializations([]);
       }
     };
 
     fetchSpecializations();
+    return () => {
+      cancelled = true;
+    };
   }, [courseId]);
 
   // 🔥 If no course selected → just render empty list
-  const finalList = courseId ? specializations : [];
+  const finalList = Array.isArray(specializations) ? specializations : [];
 
   return (
     <select
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
       required={required}
+      disabled={!courseId || finalList.length === 0}
       className="border px-3 py-2 rounded-md w-full bg-card"
     >
-      <option value="">Select Specialization</option>
+      <option value="">{courseId ? "Select Specialization" : "Select Course first"}</option>
 
-      {finalList.map((spec) => (
-        <option key={spec._id} value={spec._id}>
-          {spec.name}
-        </option>
-      ))}
+      {finalList.length > 0 ? (
+        finalList.map((spec) => (
+          <option key={spec._id} value={spec._id}>
+            {spec.name}
+          </option>
+        ))
+      ) : (
+        courseId && <option value="" disabled>No specializations available</option>
+      )}
     </select>
   );
 }

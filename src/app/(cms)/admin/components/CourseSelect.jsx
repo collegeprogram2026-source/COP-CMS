@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { callApi } from "@/lib/apiClient";
 
 export default function CourseSelect({
   value,
@@ -12,12 +13,22 @@ export default function CourseSelect({
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const res = await fetch("/api/admin/courses", {
-        cache: "no-store",
-      });
-      const data = await res.json();
-      const courseArray = Array.isArray(data) ? data : [];
-      setCourses(courseArray.filter((c) => c.isActive)); // Only show active courses
+      try {
+        const res = await callApi("/api/admin/courses", { cache: "no-store", auth: true });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error("CourseSelect: failed to fetch courses", { status: res.status, err });
+          setCourses([]);
+          return;
+        }
+
+        const data = await res.json();
+        const courseArray = Array.isArray(data) ? data : [];
+        setCourses(courseArray.filter((c) => c.isActive));
+      } catch (error) {
+        console.error("CourseSelect: error fetching courses", error);
+        setCourses([]);
+      }
     };
 
     fetchCourses();
