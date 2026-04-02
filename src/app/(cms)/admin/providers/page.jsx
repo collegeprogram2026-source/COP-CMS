@@ -784,7 +784,7 @@ export default function ProvidersPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-muted/20 dark:bg-zinc-800/20 border-b border-border/40 dark:border-zinc-800/60">
-                    {["Name", "Type", "Slug", "Excerpt", "Featured", "Status", "Active", "Actions"].map((h) => (
+                    {["S.No.", "Name", "Type", "Slug", "Excerpt", "Featured", "Status", "Active", "Actions"].map((h) => (
                       <th key={h} className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">
                         {h}
                       </th>
@@ -792,8 +792,9 @@ export default function ProvidersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30 dark:divide-zinc-800/50">
-                  {providers.map((item) => (
+                  {providers.map((item, index) => (
                     <tr key={item._id} className="hover:bg-muted/20 dark:hover:bg-zinc-800/20 transition-colors group">
+                      <td className="px-6 py-4 text-sm font-bold text-muted-foreground tracking-tight">{index + 1}</td>
                       <td className="px-6 py-4 font-bold text-foreground whitespace-nowrap">{item.name}</td>
                       <td className="px-6 py-4">
                         <span className="text-muted-foreground/70 text-sm">{item.type || "—"}</span>

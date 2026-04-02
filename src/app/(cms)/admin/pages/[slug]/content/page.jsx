@@ -7,6 +7,7 @@ import TextBlock from "../../../components/TextBlock";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/apiClient";
+import { Layers, FileText } from "lucide-react";
 
 export default function PageContentPage() {
   const router = useRouter();
@@ -216,9 +217,9 @@ export default function PageContentPage() {
         {/* Header Navigation */}
         <div className="flex items-center gap-4">
           <Link
-            href={`/admin/pages/${slug}`}
+            href={`/admin/pages`}
             className="p-2 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
-            title="Back to Page Editor"
+            title="Back to Pages"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           </Link>
@@ -245,6 +246,24 @@ export default function PageContentPage() {
               {page.isPublished ? "Published" : "Draft"}
             </Button>
           </div>
+        </div>
+
+        {/* ── Tab Navigation ── */}
+        <div className="flex flex-wrap items-center gap-3 px-1 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <Button
+            onClick={() => router.push(`/admin/pages/${slug}`)}
+            className="px-6 py-2.5 bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2"
+          >
+            <Layers className="w-4 h-4" />
+            Content Model
+          </Button>
+
+          <Button
+            className="px-6 py-2.5 rounded-xl font-bold transition-all text-sm h-auto flex items-center gap-2 bg-black text-white dark:bg-white dark:text-black shadow-lg shadow-black/10"
+          >
+            <FileText className="w-4 h-4" />
+            Manage Content
+          </Button>
         </div>
 
         {/* Main Content Area */}

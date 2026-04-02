@@ -299,6 +299,7 @@ export default function SpecializationsPage() {
           <table className="w-full text-left">
             <thead className="bg-muted/30">
               <tr>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">S.No.</th>
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name</th>
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Slug</th>
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Course</th>
@@ -308,8 +309,13 @@ export default function SpecializationsPage() {
             </thead>
 
             <tbody className="divide-y divide-border/40">
-              {specializations.map((spec) => (
+              {specializations.map((spec, index) => (
                 <tr key={spec._id} className="hover:bg-muted/30 transition-colors group">
+                  {/* S.No. */}
+                  <td className="px-6 py-4 text-sm font-semibold text-muted-foreground">
+                    {index + 1}
+                  </td>
+
                   {/* Name */}
                   <td className="px-6 py-4">
                     {editingId === spec._id ? (
