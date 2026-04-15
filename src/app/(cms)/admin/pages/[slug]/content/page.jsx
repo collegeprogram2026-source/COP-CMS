@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import TextBlock from "../../../components/TextBlock";
+import ImageUploader from "../../../components/ImageUploader";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/apiClient";
@@ -608,29 +609,11 @@ function FormField({ field, value, onChange }) {
 
       case "image":
         return (
-          <div className="space-y-4">
-            <div className="relative">
-              <input
-                type="text"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder="Paste Image URL here..."
-                className={inputClasses}
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
-              </div>
-            </div>
-            {value && (
-              <div className="p-2 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-[2rem] overflow-hidden inline-block shadow-sm">
-                <img
-                  src={value}
-                  alt="Preview"
-                  className="max-w-xs max-h-64 rounded-3xl object-cover"
-                />
-              </div>
-            )}
-          </div>
+          <ImageUploader
+            value={value}
+            onChange={(url) => onChange(url)}
+            folder="cop/pages"
+          />
         );
 
       case "select":

@@ -47,7 +47,7 @@ function SetPasswordInner() {
         return
       }
       setSuccess(true)
-      setTimeout(() => router.replace("/login"), 2000)
+      setTimeout(() => router.replace("/admin/login"), 2000)
     } catch {
       setError("Network error. Please try again.")
       setLoading(false)

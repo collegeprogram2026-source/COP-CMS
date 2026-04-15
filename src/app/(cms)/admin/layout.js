@@ -7,7 +7,7 @@ export default async function AdminLayout({ children }) {
 
   // Only logged-in users can access /admin
   if (!clerkUser) {
-    redirect("/login")
+    redirect("/admin/login")
   }
 
   return (

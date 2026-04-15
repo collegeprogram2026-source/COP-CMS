@@ -8,6 +8,7 @@ import {
   BookOpen,
   GraduationCap,
   Users,
+  UserCircle,
   MessageSquare,
   Star,
   ChevronDown,
@@ -67,6 +68,13 @@ const sidebarItems = [
     section: "reviews",
   },
   {
+    name: "Students",
+    path: "/admin/students",
+    icon: <UserCircle size={18} />,
+    shortcut: "S",
+    section: "students",
+  },
+  {
     name: "Users",
     path: "/admin/users",
     icon: <Users size={18} />,
@@ -111,7 +119,7 @@ export default function AdminSidebar({ isSidebarOpen, setIsSidebarOpen, isCollap
   }, []);
 
   const handleLogout = async () => {
-    await signOut({ redirectUrl: "/login" });
+    await signOut({ redirectUrl: "/admin/login" });
   };
 
   useEffect(() => {
