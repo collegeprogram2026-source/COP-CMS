@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/apiClient";
 import ContentBuilder from "../components/ContentBuilder";
 import TextBlock from "../components/TextBlock";
+import ImageUploader from "../components/ImageUploader";
 import {
   GraduationCap,
   Image as ImageIcon,
@@ -158,14 +159,25 @@ function ArrayEditor({ fieldName, form, setForm, fields, template, addLabel, sin
           <div key={i} className="flex gap-4 items-start p-4 bg-muted/20 dark:bg-zinc-800/30 rounded-xl border border-border/40 dark:border-zinc-700/40">
             <div className="flex-1 grid grid-cols-3 gap-4">
               {fields.map((f) => (
-                <input
-                  key={f.key}
-                  type="text"
-                  placeholder={f.label}
-                  value={item[f.key] || ""}
-                  onChange={(e) => update(i, f.key, e.target.value)}
-                  className={inp + " col-span-1"}
-                />
+                f.type === "image" ? (
+                  <div key={f.key} className="col-span-1">
+                    <ImageUploader
+                      label={f.label}
+                      value={item[f.key] || ""}
+                      onChange={(url) => update(i, f.key, url)}
+                      folder="cop/providers"
+                    />
+                  </div>
+                ) : (
+                  <input
+                    key={f.key}
+                    type="text"
+                    placeholder={f.label}
+                    value={item[f.key] || ""}
+                    onChange={(e) => update(i, f.key, e.target.value)}
+                    className={inp + " col-span-1"}
+                  />
+                )
               ))}
             </div>
             <Button
@@ -207,20 +219,20 @@ function GalleryEditor({ form, setForm }) {
       <SectionHeader title="Gallery Images" count={images.length} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {images.map((img, i) => (
-          <div key={i} className="flex gap-3 items-center group">
-            <input
-              type="text"
-              placeholder="https://image-url.com"
-              value={img}
-              onChange={(e) => update(i, e.target.value)}
-              className={inp}
-            />
+          <div key={i} className="flex gap-3 items-start group">
+            <div className="flex-1">
+              <ImageUploader
+                value={img}
+                onChange={(url) => update(i, url)}
+                folder="cop/providers/gallery"
+              />
+            </div>
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => remove(i)}
-              className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors mt-1.5"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -386,12 +398,12 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
         {/* ── 2. Branding & Media ── */}
         <FormSection icon={ImageIcon} title="Branding & Media" description="Logos and imagery">
           <div className="grid grid-cols-12 gap-6">
-            <Field label="Logo URL" span={6} hint="University logo URL">
-              <input type="text" placeholder="https://..." value={form.logo} onChange={(e) => setForm({ ...form, logo: e.target.value })} className={inp} />
+            <Field label="Logo" span={6} hint="University logo">
+              <ImageUploader value={form.logo} onChange={(url) => setForm({ ...form, logo: url })} folder="cop/providers/logos" />
             </Field>
 
-            <Field label="Cover Image URL" span={6} hint="Main banner image URL">
-              <input type="text" placeholder="https://..." value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} className={inp} />
+            <Field label="Cover Image" span={6} hint="Main banner image">
+              <ImageUploader value={form.coverImage} onChange={(url) => setForm({ ...form, coverImage: url })} folder="cop/providers/covers" />
             </Field>
 
             <div className="col-span-12">
@@ -467,7 +479,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             <ArrayEditor
               fieldName="approvals"
               form={form} setForm={setForm}
-              fields={[{ key: "name", label: "Approving Body" }, { key: "logo", label: "Logo URL" }]}
+              fields={[{ key: "name", label: "Approving Body" }, { key: "logo", label: "Logo", type: "image" }]}
               template={{ name: "", logo: "" }}
               addLabel="Add Approval"
             />
@@ -487,7 +499,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             <ArrayEditor
               fieldName="facts"
               form={form} setForm={setForm}
-              fields={[{ key: "icon", label: "Icon Name/URL" }, { key: "text", label: "Fact Text" }]}
+              fields={[{ key: "icon", label: "Icon", type: "image" }, { key: "text", label: "Fact Text" }]}
               template={{ icon: "", text: "" }}
               addLabel="Add Fact"
             />
@@ -507,7 +519,7 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
             <ArrayEditor
               fieldName="placementPartners"
               form={form} setForm={setForm}
-              fields={[{ key: "name", label: "Company Name" }, { key: "logo", label: "Logo URL" }]}
+              fields={[{ key: "name", label: "Company Name" }, { key: "logo", label: "Logo", type: "image" }]}
               template={{ name: "", logo: "" }}
               addLabel="Add Placement Partner"
             />
@@ -544,8 +556,8 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
                 onChange={(val) => setForm({ ...form, sampleCertificateDescription: val })}
               />
             </div>
-            <Field label="Sample Certificate Image URL" span={12} hint="URL to high-res sample certificate">
-              <input type="text" placeholder="https://..." value={form.sampleCertificateImage} onChange={(e) => setForm({ ...form, sampleCertificateImage: e.target.value })} className={inp} />
+            <Field label="Sample Certificate Image" span={12} hint="High-res sample certificate image">
+              <ImageUploader value={form.sampleCertificateImage} onChange={(url) => setForm({ ...form, sampleCertificateImage: url })} folder="cop/providers/certificates" />
             </Field>
           </div>
         </FormSection>

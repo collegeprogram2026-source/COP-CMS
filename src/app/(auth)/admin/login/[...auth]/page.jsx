@@ -83,7 +83,7 @@ export default function AuthPage() {
           {/* Clerk component */}
           <SignIn
             afterSignInUrl="/admin"
-            signUpUrl="/login"
+            signUpUrl="/admin/login"
             redirectUrl="/admin"
             appearance={{
               elements: {

@@ -125,7 +125,7 @@ export default function LoginPage() {
           {/* Clerk SignIn */}
           <SignIn
             afterSignInUrl="/admin"
-            signUpUrl="/login"
+            signUpUrl="/admin/login"
             redirectUrl="/admin"
             appearance={{
               baseTheme: isDark ? dark : undefined,
