@@ -1,13 +1,43 @@
 "use client";
 
 /**
- * Robust API client for COP CMS
- * prepends the backend URL and handles authentication headers.
+ * API client for COP CMS.
+ * Prepends the backend URL and attaches a Clerk Bearer token when `options.auth` is true.
+ * Token retrieval is delegated to a module-level getter registered once by ClerkTokenBridge.
  */
+
+let tokenGetter = null;
+let resolveTokenGetterReady;
+const tokenGetterReady = new Promise((resolve) => {
+    resolveTokenGetterReady = resolve;
+});
+
+export function setTokenGetter(fn) {
+    tokenGetter = fn;
+    if (resolveTokenGetterReady) {
+        resolveTokenGetterReady();
+        resolveTokenGetterReady = null;
+    }
+}
+
+async function waitForTokenGetter(timeoutMs = 5000) {
+    if (tokenGetter) return;
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(
+            () => reject(new Error("Clerk auth bridge not ready within timeout")),
+            timeoutMs
+        );
+    });
+    try {
+        await Promise.race([tokenGetterReady, timeout]);
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
 export async function callApi(endpoint, options = {}) {
     const backendUrl = process.env.NEXT_PUBLIC_APP_BACKEND_URL || "http://localhost:5000";
-
-    // Clean endpoint
     const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const url = `${backendUrl}${cleanEndpoint}`;
 
@@ -16,39 +46,15 @@ export async function callApi(endpoint, options = {}) {
         ...options.headers,
     };
 
-    // If auth is true, we ideally want to add the Clerk token.
-    // Since this is a utility function, we either expect the token to be passed 
-    // or we need to access it from the Clerk window object if available.
     if (options.auth) {
-        if (typeof window !== "undefined") {
-            // Function to wait for Clerk session to be ready
-            const waitForClerk = async () => {
-                let attempts = 0;
-                while ((!window.Clerk || !window.Clerk.session) && attempts < 20) {
-                    await new Promise(r => setTimeout(r, 100));
-                    attempts++;
-                }
-                return window.Clerk && window.Clerk.session;
-            };
-
-            const clerkReady = await waitForClerk();
-
-            if (clerkReady) {
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    if (token) {
-                        headers["Authorization"] = `Bearer ${token}`;
-                        console.log(`[apiClient] Token attached for ${cleanEndpoint}`);
-                    } else {
-                        console.warn(`[apiClient] No token found in Clerk session for ${cleanEndpoint}`);
-                    }
-                } catch (err) {
-                    console.error("[apiClient] Failed to retrieve Clerk token:", err);
-                }
-            } else {
-                console.warn(`[apiClient] Clerk not initialized or session missing after wait for ${cleanEndpoint}`);
-            }
+        await waitForTokenGetter();
+        const token = await tokenGetter();
+        if (!token) {
+            throw new Error(
+                `[apiClient] No Clerk token available for ${cleanEndpoint} — user is likely signed out`
+            );
         }
+        headers["Authorization"] = `Bearer ${token}`;
     }
 
     const { auth, body, ...fetchOptions } = options;
