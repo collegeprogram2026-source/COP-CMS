@@ -23,6 +23,7 @@ import {
   Trash2,
   Loader2,
   ChevronRight,
+  Scale,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -67,6 +68,20 @@ const EMPTY_FORM = {
   sampleCertificateDescription: null,
   sampleCertificateImage: "",
   admissionOpen: { isOpen: false, year: "", text: "", description: null },
+  comparison: {
+    location: "",
+    feesStartingFrom: "",
+    duration: "",
+    intakePeriod: "",
+    timeCommitment: "",
+    totalSeatsAvailable: "",
+    overallRating: "",
+    accreditation: "",
+    placementRate: "",
+    averageSalary: "",
+    eligibility: "",
+    minimumRequirements: "",
+  },
   metaTitle: "",
   metaDescription: "",
   metaKeywords: "",
@@ -442,6 +457,140 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
           </div>
         </FormSection>
 
+        {/* ── 3.5 Comparison ── */}
+        <FormSection icon={Scale} title="Comparison" description="Key data points used to compare this provider against others">
+          <div className="grid grid-cols-12 gap-6">
+            <Field label="Location" span={6} hint='e.g. "Noida, India"'>
+              <input
+                type="text"
+                placeholder="City, Country"
+                value={form.comparison?.location || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, location: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Fees Starting From" span={3} hint="Numeric value (e.g. 250000)">
+              <input
+                type="number"
+                min="0"
+                placeholder="250000"
+                value={form.comparison?.feesStartingFrom ?? ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, feesStartingFrom: e.target.value === "" ? "" : parseFloat(e.target.value) || 0 } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Duration" span={3} hint='e.g. "2 years"'>
+              <input
+                type="text"
+                placeholder="2 years"
+                value={form.comparison?.duration || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, duration: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Intake Period" span={4} hint='e.g. "Jan & Jul"'>
+              <input
+                type="text"
+                placeholder="Jan & Jul"
+                value={form.comparison?.intakePeriod || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, intakePeriod: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Time Commitment" span={4} hint='e.g. "15-20 hrs/week"'>
+              <input
+                type="text"
+                placeholder="15-20 hrs/week"
+                value={form.comparison?.timeCommitment || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, timeCommitment: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Total Seats Available" span={4}>
+              <input
+                type="number"
+                min="0"
+                placeholder="500"
+                value={form.comparison?.totalSeatsAvailable ?? ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, totalSeatsAvailable: e.target.value === "" ? "" : parseInt(e.target.value) || 0 } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Overall Rating" span={3} hint="Out of 5">
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="0.1"
+                placeholder="4.5"
+                value={form.comparison?.overallRating ?? ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, overallRating: e.target.value === "" ? "" : parseFloat(e.target.value) || 0 } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Placement Rate" span={3} hint="Percentage (0-100)">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="85"
+                value={form.comparison?.placementRate ?? ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, placementRate: e.target.value === "" ? "" : parseFloat(e.target.value) || 0 } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Average Salary" span={6} hint="Numeric (annual CTC)">
+              <input
+                type="number"
+                min="0"
+                placeholder="800000"
+                value={form.comparison?.averageSalary ?? ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, averageSalary: e.target.value === "" ? "" : parseFloat(e.target.value) || 0 } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Accreditation" span={12} hint='e.g. "UGC, AICTE, NAAC A+"'>
+              <input
+                type="text"
+                placeholder="UGC, AICTE, NAAC A+"
+                value={form.comparison?.accreditation || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, accreditation: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Eligibility" span={6} hint="Who can apply">
+              <textarea
+                placeholder="e.g. Graduation in any discipline with 50%"
+                value={form.comparison?.eligibility || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, eligibility: e.target.value } })}
+                className={ta}
+                rows={3}
+              />
+            </Field>
+
+            <Field label="Minimum Requirements" span={6} hint="Academic / technical baseline">
+              <textarea
+                placeholder="e.g. 10+2 with Mathematics, valid entrance score"
+                value={form.comparison?.minimumRequirements || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, minimumRequirements: e.target.value } })}
+                className={ta}
+                rows={3}
+              />
+            </Field>
+          </div>
+        </FormSection>
+
         {/* ── 4. Admissions ── */}
         <FormSection icon={ClipboardList} title="Admissions" description="Admission status and details">
           <div className="grid grid-cols-12 gap-6">
@@ -690,6 +839,20 @@ export default function ProvidersPage() {
       sampleCertificateDescription: item.sampleCertificateDescription || null,
       sampleCertificateImage: item.sampleCertificateImage || "",
       admissionOpen: item.admissionOpen || { isOpen: false, year: "", text: "", description: null },
+      comparison: {
+        location: item.comparison?.location || "",
+        feesStartingFrom: item.comparison?.feesStartingFrom ?? "",
+        duration: item.comparison?.duration || "",
+        intakePeriod: item.comparison?.intakePeriod || "",
+        timeCommitment: item.comparison?.timeCommitment || "",
+        totalSeatsAvailable: item.comparison?.totalSeatsAvailable ?? "",
+        overallRating: item.comparison?.overallRating ?? "",
+        accreditation: item.comparison?.accreditation || "",
+        placementRate: item.comparison?.placementRate ?? "",
+        averageSalary: item.comparison?.averageSalary ?? "",
+        eligibility: item.comparison?.eligibility || "",
+        minimumRequirements: item.comparison?.minimumRequirements || "",
+      },
       metaTitle: item.metaTitle || "",
       metaDescription: item.metaDescription || "",
       metaKeywords: item.metaKeywords || "",
