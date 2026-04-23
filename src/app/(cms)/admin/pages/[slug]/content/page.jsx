@@ -75,7 +75,8 @@ export default function PageContentPage() {
         body: {
           title: page.title,
           description: page.description,
-          sections: page.sections.map((section) => ({
+          sections: page.sections.map((section, index) => ({
+            sectionIndex: typeof section.sectionIndex === "number" ? section.sectionIndex : index,
             title: section.title,
             apiIdentifier:
               section.apiIdentifier || generateApiIdentifier(section.title),

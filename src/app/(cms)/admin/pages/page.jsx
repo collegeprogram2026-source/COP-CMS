@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CreatePageDialog } from "@/components/cms/CreatePageDialog";
 import { FileText, Pencil, Trash2, Loader2, ChevronRight } from "lucide-react";
+import { callApi } from "@/lib/apiClient";
 
 export default function PagesListPage() {
   const [pages, setPages] = useState([]);
@@ -15,9 +16,9 @@ export default function PagesListPage() {
 
   const fetchPages = async () => {
     try {
-      const res = await fetch("/api/admin/pages");
+      const res = await callApi("/api/admin/pages", { auth: true });
       const data = await res.json();
-      setPages(data);
+      setPages(Array.isArray(data) ? data : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching pages:", error);
@@ -35,7 +36,7 @@ export default function PagesListPage() {
   const handleDelete = async (slug) => {
     if (!confirm(`Delete page "${slug}"?`)) return;
     try {
-      const res = await fetch(`/api/admin/pages/${slug}`, { method: "DELETE" });
+      const res = await callApi(`/api/admin/pages/${slug}`, { method: "DELETE", auth: true });
       if (res.ok) {
         setToast({ message: "Page deleted successfully", type: "success" });
         setPages(pages.filter((p) => p.slug !== slug));

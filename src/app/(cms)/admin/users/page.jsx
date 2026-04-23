@@ -13,6 +13,7 @@ const SECTION_NAMES = {
   "degree-types": "Degree Types",
   "provider-courses": "Provider Courses",
   reviews: "Reviews",
+  students: "Students",
   "home-hero-section": "Hero Section",
   "home-industry-experts-section": "Industry Experts",
   "home-program-experts-section": "Program Experts",
@@ -30,6 +31,7 @@ const ACCESS_OPTIONS = [
   { id: "degree-types", label: "Degree Types" },
   { id: "leads", label: "Leads" },
   { id: "reviews", label: "Reviews" },
+  { id: "students", label: "Students" },
   { id: "users", label: "Users Management" },
 ];
 
@@ -163,6 +165,7 @@ export default function UsersPage() {
     try {
       const res = await callApi("/api/auth/send-invite", {
         method: "POST",
+        auth: true,
         body: { email: inviteEmail, access: accessToSend, role: inviteAccessLevel === "admin" ? "admin" : "viewer" },
       });
       const data = await res.json();
