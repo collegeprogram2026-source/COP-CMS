@@ -43,6 +43,9 @@ export default function ProviderCoursesPage() {
     isActive: true,
     bestROI: false,
     trending: false,
+    isEmiAvailable: false,
+    emiStartingAmount: "",
+    emiTerms: "",
   });
 
   const generateSlug = (value) =>
@@ -84,6 +87,9 @@ export default function ProviderCoursesPage() {
     approvals: (fd.approvals || []).map((s) => (s || "").trim()).filter(Boolean),
     highlights: (fd.highlights || []).map((s) => (s || "").trim()).filter(Boolean),
     contentBlocks: Array.isArray(fd.contentBlocks) ? fd.contentBlocks : [],
+    isEmiAvailable: !!fd.isEmiAvailable,
+    emiStartingAmount: fd.emiStartingAmount || "",
+    emiTerms: fd.emiTerms || "",
   });
 
   const handleCreate = async (e) => {
@@ -124,6 +130,9 @@ export default function ProviderCoursesPage() {
       brochureUrl: item.brochureUrl, thumbnail: item.thumbnail || "", isActive: item.isActive,
       bestROI: item.bestROI || false,
       trending: item.trending || false,
+      isEmiAvailable: item.isEmiAvailable || false,
+      emiStartingAmount: item.emiStartingAmount || "",
+      emiTerms: item.emiTerms || "",
     });
     setShowForm(false);
   };
@@ -291,6 +300,28 @@ export default function ProviderCoursesPage() {
                 <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Duration</label>
                 <input type="text" placeholder="e.g. 2 Years" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} className={inputCls} />
               </div>
+
+              {/* EMI Details */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
+                <div className="flex items-center gap-3 pt-6">
+                  <label className="flex items-center gap-3 cursor-pointer group select-none">
+                    <div className="relative flex items-center">
+                      <input type="checkbox" checked={formData.isEmiAvailable} onChange={(e) => setFormData({ ...formData, isEmiAvailable: e.target.checked })} className="peer sr-only" />
+                      <div className="w-11 h-6 rounded-full transition-colors bg-zinc-200 dark:bg-zinc-700 peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">EMI Available</span>
+                  </label>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">EMI Starting Amount</label>
+                  <input type="text" placeholder="e.g. 8,750/semester" value={formData.emiStartingAmount} onChange={(e) => setFormData({ ...formData, emiStartingAmount: e.target.value })} className={inputCls} disabled={!formData.isEmiAvailable} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">EMI Terms/Fine Print</label>
+                  <input type="text" placeholder="e.g. through approved banking partners" value={formData.emiTerms} onChange={(e) => setFormData({ ...formData, emiTerms: e.target.value })} className={inputCls} disabled={!formData.isEmiAvailable} />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Weekly Effort (hrs)</label>
                 <input type="number" placeholder="e.g. 15" value={formData.weeklyEffort} onChange={(e) => setFormData({ ...formData, weeklyEffort: e.target.value })} className={inputCls} />
