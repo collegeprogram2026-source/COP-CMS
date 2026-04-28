@@ -24,6 +24,7 @@ import {
   Loader2,
   ChevronRight,
   Scale,
+  AlertTriangle,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ const EMPTY_FORM = {
   faq: [],
   sampleCertificateDescription: null,
   sampleCertificateImage: "",
+  whoShouldChoosePoints: [],
   admissionOpen: { isOpen: false, year: "", text: "", description: null },
   comparison: {
     location: "",
@@ -81,6 +83,10 @@ const EMPTY_FORM = {
     averageSalary: "",
     eligibility: "",
     minimumRequirements: "",
+    ugcDebStatus: false,
+    naacGrade: "",
+    examType: "",
+    roiScore: "",
   },
   metaTitle: "",
   metaDescription: "",
@@ -569,6 +575,59 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               />
             </Field>
 
+            <Field label="UGC-DEB Status" span={6} hint="Approved status">
+              <div className="flex items-center gap-4 h-12">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={form.comparison?.ugcDebStatus === true}
+                    onChange={() => setForm({ ...form, comparison: { ...form.comparison, ugcDebStatus: true } })}
+                    className="w-4 h-4 text-indigo-600"
+                  />
+                  <span className="text-sm font-medium">Approved</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={form.comparison?.ugcDebStatus === false}
+                    onChange={() => setForm({ ...form, comparison: { ...form.comparison, ugcDebStatus: false } })}
+                    className="w-4 h-4 text-indigo-600"
+                  />
+                  <span className="text-sm font-medium">Not Approved</span>
+                </label>
+              </div>
+            </Field>
+
+            <Field label="NAAC Grade" span={6} hint='e.g. "A+"'>
+              <input
+                type="text"
+                placeholder="A+"
+                value={form.comparison?.naacGrade || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, naacGrade: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="Exam Type" span={6} hint='e.g. "Online Semester Exam"'>
+              <input
+                type="text"
+                placeholder="Online Semester Exam"
+                value={form.comparison?.examType || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, examType: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
+            <Field label="ROI Score" span={6} hint='e.g. "4.8/5" or "High"'>
+              <input
+                type="text"
+                placeholder="4.8/5"
+                value={form.comparison?.roiScore || ""}
+                onChange={(e) => setForm({ ...form, comparison: { ...form.comparison, roiScore: e.target.value } })}
+                className={inp}
+              />
+            </Field>
+
             <Field label="Eligibility" span={6} hint="Who can apply">
               <textarea
                 placeholder="e.g. Graduation in any discipline with 50%"
@@ -683,6 +742,16 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               addLabel="Add Scholarship"
             />
           </DescribedList>
+
+          <FormSection title="Who Should Choose" icon={AlertTriangle} description="Key statements for potential students">
+            <ArrayEditor
+              fieldName="whoShouldChoosePoints"
+              form={form} setForm={setForm}
+              fields={[{ key: "text", label: "Statement / Point" }]}
+              template={{ text: "" }}
+              addLabel="Add Statement"
+            />
+          </FormSection>
 
           <FormSection title="FAQ" icon={HelpCircle} description="Frequently asked questions">
             <ArrayEditor
@@ -836,6 +905,7 @@ export default function ProvidersPage() {
       placementPartnersDescription: item.placementPartnersDescription || null,
       placementPartners: item.placementPartners || [],
       faq: item.faq || [],
+      whoShouldChoosePoints: item.whoShouldChoosePoints || [],
       sampleCertificateDescription: item.sampleCertificateDescription || null,
       sampleCertificateImage: item.sampleCertificateImage || "",
       admissionOpen: item.admissionOpen || { isOpen: false, year: "", text: "", description: null },
@@ -852,6 +922,10 @@ export default function ProvidersPage() {
         averageSalary: item.comparison?.averageSalary ?? "",
         eligibility: item.comparison?.eligibility || "",
         minimumRequirements: item.comparison?.minimumRequirements || "",
+        ugcDebStatus: item.comparison?.ugcDebStatus || false,
+        naacGrade: item.comparison?.naacGrade || "",
+        examType: item.comparison?.examType || "",
+        roiScore: item.comparison?.roiScore || "",
       },
       metaTitle: item.metaTitle || "",
       metaDescription: item.metaDescription || "",
