@@ -182,6 +182,27 @@ export default function EditPagePage({ params: paramsPromise }) {
 
   const handleSave = async () => {
     if (!page.title || !page.slug) { setError("Title and slug are required"); return; }
+
+    // Validate every field has a name and a type before sending
+    for (const section of page.sections) {
+      if (!section.title?.trim()) {
+        setError(`Section is missing a title`);
+        return;
+      }
+      for (let i = 0; i < section.fields.length; i++) {
+        const f = section.fields[i];
+        if (!f.name?.trim()) {
+          setError(`Section "${section.title}" → field #${i + 1} is missing a Field Name`);
+          setActiveSection(section._id);
+          return;
+        }
+        if (!f.type) {
+          setError(`Section "${section.title}" → field "${f.name}" is missing a type`);
+          return;
+        }
+      }
+    }
+
     setSaving(true);
     setError("");
     try {

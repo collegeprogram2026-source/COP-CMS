@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // When cop-cms is proxied through cop-frontend (port 3000),
-  // assets must load directly from cop-cms (port 3001) to avoid
-  // /_next/ path conflicts between the two Next.js apps.
-  assetPrefix: process.env.NODE_ENV === "production" ? "" : "http://localhost:3001",
+  // When cop-cms is proxied through cop-frontend (frontend.com/admin/*),
+  // assets must load from the CMS's own origin so /_next/* paths don't
+  // collide with the frontend Next app.
+  //   Dev:  localhost:3001 (CMS dev port)
+  //   Prod: CMS_PUBLIC_URL (set in Vercel to the CMS's canonical URL)
+  assetPrefix:
+    process.env.NODE_ENV === "production"
+      ? process.env.CMS_PUBLIC_URL || undefined
+      : "http://localhost:3001",
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },

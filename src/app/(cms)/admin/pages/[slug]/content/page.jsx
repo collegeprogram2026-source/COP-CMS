@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import TextBlock from "../../../components/TextBlock";
-import ImageUploader from "../../../components/ImageUploader";
+import MediaUploader from "../../../components/MediaUploader";
 import { Toast } from "@/app/(cms)/admin/components/toast";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/apiClient";
@@ -610,7 +610,7 @@ function FormField({ field, value, onChange }) {
 
       case "image":
         return (
-          <ImageUploader
+          <MediaUploader
             value={value}
             onChange={(url) => onChange(url)}
             folder="cop/pages"
