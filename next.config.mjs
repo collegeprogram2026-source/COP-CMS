@@ -4,6 +4,11 @@ const nextConfig = {
   // assets must load directly from cop-cms (port 3001) to avoid
   // /_next/ path conflicts between the two Next.js apps.
   assetPrefix: process.env.NODE_ENV === "production" ? "" : "http://localhost:3001",
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+    ],
+  },
 
   async rewrites() {
     return [
