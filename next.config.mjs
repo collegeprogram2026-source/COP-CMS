@@ -6,14 +6,15 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === "production" ? "" : "http://localhost:3001",
 
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
     return [
       {
         source: "/api/admin/:path*",
-        destination: "http://localhost:5000/api/admin/:path*",
+        destination: `${backendUrl}/api/admin/:path*`,
       },
       {
         source: "/api/public/:path*",
-        destination: "http://localhost:5000/api/public/:path*",
+        destination: `${backendUrl}/api/public/:path*`,
       },
     ];
   },
