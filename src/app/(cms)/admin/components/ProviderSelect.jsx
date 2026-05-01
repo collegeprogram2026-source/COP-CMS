@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { callApi } from "@/lib/apiClient";
 
 export default function ProviderSelect({ value, onChange, required = false }) {
   const [providers, setProviders] = useState([]);
@@ -8,9 +9,18 @@ export default function ProviderSelect({ value, onChange, required = false }) {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const res = await fetch("/api/admin/providers", { cache: "no-store" });
+        const res = await callApi("/api/admin/providers", {
+          cache: "no-store",
+          auth: true,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error("ProviderSelect: failed to fetch providers", { status: res.status, err });
+          setProviders([]);
+          return;
+        }
         const data = await res.json();
-        setProviders(data);
+        setProviders(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching providers", err);
         setProviders([]);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { callApi } from "@/lib/apiClient";
 
 export default function DegreeTypeSelect({
   value,
@@ -13,13 +14,21 @@ export default function DegreeTypeSelect({
   useEffect(() => {
     const fetchDegreeTypes = async () => {
       try {
-        const res = await fetch("/api/admin/degree-types", {
+        const res = await callApi("/api/admin/degree-types", {
           cache: "no-store",
+          auth: true,
         });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error("DegreeTypeSelect: failed to fetch degree types", { status: res.status, err });
+          setDegreeTypes([]);
+          return;
+        }
         const data = await res.json();
-        setDegreeTypes(data);
+        setDegreeTypes(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching degree types", err);
+        setDegreeTypes([]);
       }
     };
 
