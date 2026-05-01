@@ -25,6 +25,8 @@ export default function ProviderCoursesPage() {
     providerId: "",
     title: "",
     slug: "",
+    shortDescription: "",
+    minFees: "",
     fees: "",
     discountedFees: "",
     feesBreakdown: [],
@@ -69,7 +71,7 @@ export default function ProviderCoursesPage() {
 
   const emptyForm = {
     degreeTypeId: "", courseId: "", specializationId: "", providerId: "",
-    title: "", slug: "", fees: "", discountedFees: "", feesBreakdown: [],
+    title: "", slug: "", shortDescription: "", minFees: "", fees: "", discountedFees: "", feesBreakdown: [],
     duration: "", eligibility: "", seatsAvailable: "", brochureUrl: "", thumbnail: "",
     weeklyEffort: "", examPattern: "", employerAcceptance: "Medium",
     difficultyLevel: "Intermediate", approvals: [], highlights: [],
@@ -79,6 +81,7 @@ export default function ProviderCoursesPage() {
 
   const buildPayload = (fd) => ({
     ...fd,
+    minFees: fd.minFees ? Number(fd.minFees) : 0,
     fees: fd.fees ? Number(fd.fees) : 0,
     discountedFees: fd.discountedFees ? Number(fd.discountedFees) : 0,
     weeklyEffort: fd.weeklyEffort ? Number(fd.weeklyEffort) : undefined,
@@ -124,7 +127,9 @@ export default function ProviderCoursesPage() {
       approvals: Array.isArray(item.approvals) ? item.approvals : [],
       highlights: Array.isArray(item.highlights) ? item.highlights : [],
       contentBlocks: Array.isArray(item.contentBlocks) ? item.contentBlocks : [],
-      title: item.title, slug: item.slug, fees: item.fees,
+      title: item.title, slug: item.slug, shortDescription: item.shortDescription || "", 
+      minFees: item.minFees || "",
+      fees: item.fees,
       discountedFees: item.discountedFees, duration: item.duration,
       eligibility: item.eligibility, seatsAvailable: item.seatsAvailable,
       brochureUrl: item.brochureUrl, thumbnail: item.thumbnail || "", isActive: item.isActive,
@@ -260,6 +265,15 @@ export default function ProviderCoursesPage() {
                     }
                   />
                 </div>
+                <div className="space-y-2 col-span-1 md:col-span-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Short Description</label>
+                  <textarea
+                    placeholder="Brief overview for cards and lists"
+                    value={formData.shortDescription}
+                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                    className={inputCls + " min-h-[80px]"}
+                  />
+                </div>
               </div>
 
               {/* Classification */}
@@ -277,7 +291,11 @@ export default function ProviderCoursesPage() {
 
               {/* Pricing */}
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Fees (₹)</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Min Fees (Starting At ₹)</label>
+                <input type="number" placeholder="0.00" value={formData.minFees} onChange={(e) => setFormData({ ...formData, minFees: e.target.value })} className={inputCls} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Total Fees (₹)</label>
                 <input type="number" placeholder="0.00" value={formData.fees} onChange={(e) => setFormData({ ...formData, fees: e.target.value })} className={inputCls} />
               </div>
               <div className="space-y-2">
@@ -683,6 +701,15 @@ export default function ProviderCoursesPage() {
                           />
                         </div>
                         <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Short Description</label>
+                          <textarea
+                            value={formData.shortDescription}
+                            onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                            className={inputCls + " min-h-[60px]"}
+                            placeholder="Short description"
+                          />
+                        </div>
+                        <div className="space-y-1">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Degree Type</label>
                           <DegreeTypeSelect value={formData.degreeTypeId} onChange={(v) => setFormData({ ...formData, degreeTypeId: v, courseId: "", specializationId: "" })} />
                         </div>
@@ -698,12 +725,26 @@ export default function ProviderCoursesPage() {
                           <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Provider</label>
                           <ProviderSelect value={formData.providerId} onChange={(v) => setFormData({ ...formData, providerId: v })} />
                         </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Thumbnail Photo</label>
+                          <ImageUploader 
+                            value={formData.thumbnail} 
+                            onChange={(url) => setFormData({ ...formData, thumbnail: url })} 
+                            folder="cop/provider-courses" 
+                          />
+                        </div>
                       </div>
                     ) : (
-                      <div>
-                        <span className="block font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-snug line-clamp-1">
-                          {item.title}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        {item.thumbnail && (
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700/50 flex-shrink-0 bg-zinc-100">
+                            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div>
+                          <span className="block font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-snug line-clamp-1">
+                            {item.title}
+                          </span>
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50">
                             {item.degreeTypeId?.name}
@@ -732,6 +773,7 @@ export default function ProviderCoursesPage() {
                             )}
                           </ul>
                         )}
+                        </div>
                       </div>
                     )}
                   </td>
@@ -848,7 +890,12 @@ export default function ProviderCoursesPage() {
                     {editingId === item._id ? (
                       <div className="space-y-2 min-w-[160px]">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">List Price (₹)</label>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Min Price (₹)</label>
+                          <input type="number" value={formData.minFees} onChange={(e) => setFormData({ ...formData, minFees: e.target.value })}
+                            className={inputCls} placeholder="0.00" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Total Price (₹)</label>
                           <input type="number" value={formData.fees} onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
                             className={inputCls} placeholder="0.00" />
                         </div>
