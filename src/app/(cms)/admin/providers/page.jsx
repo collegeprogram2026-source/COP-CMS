@@ -70,6 +70,7 @@ const EMPTY_FORM = {
   sampleCertificateImage: "",
   whoShouldChoosePoints: [],
   admissionOpen: { isOpen: false, year: "", text: "", description: null },
+  admissionOpenDescription: null,
   comparison: {
     location: "",
     feesStartingFrom: "",
@@ -909,6 +910,7 @@ export default function ProvidersPage() {
       sampleCertificateDescription: item.sampleCertificateDescription || null,
       sampleCertificateImage: item.sampleCertificateImage || "",
       admissionOpen: item.admissionOpen || { isOpen: false, year: "", text: "", description: null },
+      admissionOpenDescription: item.admissionOpenDescription || null,
       comparison: {
         location: item.comparison?.location || "",
         feesStartingFrom: item.comparison?.feesStartingFrom ?? "",
