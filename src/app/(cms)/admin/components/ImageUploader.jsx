@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useRef, useState } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
  *  - className?: string
  */
 export default function ImageUploader({ value, onChange, folder = "cop/admin", label, className = "" }) {
+  const { getToken } = useAuth();
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,10 +30,7 @@ export default function ImageUploader({ value, onChange, folder = "cop/admin", l
       const backendUrl =
         process.env.NEXT_PUBLIC_APP_BACKEND_URL || "http://localhost:5000";
 
-      let token = "";
-      if (typeof window !== "undefined" && window.Clerk?.session) {
-        token = await window.Clerk.session.getToken();
-      }
+      const token = await getToken();
 
       const formData = new FormData();
       formData.append("file", file);
