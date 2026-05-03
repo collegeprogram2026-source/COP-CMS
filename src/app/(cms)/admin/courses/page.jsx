@@ -22,6 +22,10 @@ export default function CoursesPage() {
     slug: "",
     degreeTypeId: "",
     icon: "",
+    description: "",
+    duration: "",
+    feeStarting: "",
+    universities: [],
     approvals: [],
     highlights: [],
     contentBlocks: [],
@@ -29,9 +33,12 @@ export default function CoursesPage() {
   };
 
   const [formData, setFormData] = useState(emptyForm);
+  const [providers, setProviders] = useState([]);
 
   const buildPayload = (fd) => ({
     ...fd,
+    feeStarting: fd.feeStarting ? Number(fd.feeStarting) : null,
+    universities: Array.isArray(fd.universities) ? fd.universities : [],
     approvals: (fd.approvals || []).map((s) => (s || "").trim()).filter(Boolean),
     highlights: (fd.highlights || []).map((s) => (s || "").trim()).filter(Boolean),
     contentBlocks: Array.isArray(fd.contentBlocks) ? fd.contentBlocks : [],
@@ -73,8 +80,21 @@ export default function CoursesPage() {
     }
   };
 
+  const fetchProviders = async () => {
+    try {
+      const res = await callApi("/api/admin/providers", { auth: true });
+      if (res.ok) {
+        const data = await res.json();
+        setProviders(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Error fetching providers", err);
+    }
+  };
+
   useEffect(() => {
     fetchCourses();
+    fetchProviders();
   }, []);
 
   /* ---------------------------------- */
@@ -126,12 +146,16 @@ export default function CoursesPage() {
       slug: course.slug,
       degreeTypeId: course.degreeTypeId?._id || course.degreeTypeId,
       icon: course.icon || "",
+      description: course.description || "",
+      duration: course.duration || "",
+      feeStarting: course.feeStarting || "",
+      universities: Array.isArray(course.universities) ? course.universities.map(u => u._id || u) : [],
       approvals: Array.isArray(course.approvals) ? course.approvals : [],
       highlights: Array.isArray(course.highlights) ? course.highlights : [],
       contentBlocks: Array.isArray(course.contentBlocks) ? course.contentBlocks : [],
       isActive: course.isActive,
     });
-    setShowForm(false);
+    setShowForm(true);
   };
 
   const handleUpdate = async (id) => {
@@ -292,6 +316,30 @@ export default function CoursesPage() {
                   />
                 </div>
 
+                {/* Duration */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Duration</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2 Years / 4 Semesters"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    className="w-full bg-muted/30 dark:bg-zinc-800/50 border border-border/50 dark:border-zinc-700/50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-foreground text-sm font-medium"
+                  />
+                </div>
+
+                {/* Fee Starting */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Starting Fee (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 50000"
+                    value={formData.feeStarting}
+                    onChange={(e) => setFormData({ ...formData, feeStarting: e.target.value })}
+                    className="w-full bg-muted/30 dark:bg-zinc-800/50 border border-border/50 dark:border-zinc-700/50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-foreground text-sm font-medium"
+                  />
+                </div>
+
                 <div className="flex flex-col justify-end space-y-2">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 opacity-0 select-none">Status</label>
                   <label className="flex items-center gap-3 cursor-pointer group bg-muted/20 dark:bg-zinc-800/30 px-4 py-[9px] rounded-xl border border-border/40 dark:border-zinc-800/40 w-full transition-colors hover:border-primary/30">
@@ -311,6 +359,61 @@ export default function CoursesPage() {
                     </div>
                     <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Active Status</span>
                   </label>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Short Description</label>
+                <textarea
+                  placeholder="Provide a brief overview of the course..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full bg-muted/30 dark:bg-zinc-800/50 border border-border/50 dark:border-zinc-700/50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-foreground text-sm font-medium resize-none"
+                />
+              </div>
+
+              {/* Universities Multi-Select */}
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Associated Universities</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {providers.map((provider) => (
+                    <label
+                      key={provider._id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer group ${formData.universities.includes(provider._id)
+                        ? "bg-primary/10 border-primary/40 ring-1 ring-primary/20"
+                        : "bg-muted/20 border-border/40 hover:border-primary/30"
+                        }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={formData.universities.includes(provider._id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData(prev => ({
+                            ...prev,
+                            universities: checked
+                              ? [...prev.universities, provider._id]
+                              : prev.universities.filter(id => id !== provider._id)
+                          }));
+                        }}
+                      />
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${formData.universities.includes(provider._id)
+                        ? "bg-primary border-primary"
+                        : "bg-white dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 group-hover:border-primary"
+                        }`}>
+                        {formData.universities.includes(provider._id) && (
+                          <Plus className="w-3 h-3 text-white rotate-45 scale-125" />
+                        )}
+                      </div>
+                      <span className={`text-xs font-bold transition-colors ${formData.universities.includes(provider._id) ? "text-primary" : "text-muted-foreground"
+                        }`}>
+                        {provider.name}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -371,6 +474,8 @@ export default function CoursesPage() {
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Course Name</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Identifier (Slug)</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Degree Type</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Duration/Fees</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Universities</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap">Status</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest whitespace-nowrap text-right">Actions</th>
                 </tr>
@@ -407,25 +512,34 @@ export default function CoursesPage() {
                             className="w-full bg-muted/50 dark:bg-zinc-800/50 border border-border/50 dark:border-zinc-700/50 px-3 py-1.5 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm text-foreground font-medium"
                           />
                         ) : (
-                          <div>
-                            <span className="text-sm font-bold text-foreground tracking-tight">{course.name}</span>
-                            {Array.isArray(course.approvals) && course.approvals.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1.5">
-                                {course.approvals.slice(0, 3).map((a, i) => (
-                                  <span key={i} className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
-                                    {a}
-                                  </span>
-                                ))}
-                                {course.approvals.length > 3 && (
-                                  <span className="text-[9px] text-muted-foreground italic">+{course.approvals.length - 3}</span>
-                                )}
-                              </div>
-                            )}
-                            {Array.isArray(course.highlights) && course.highlights.length > 0 && (
-                              <p className="mt-1 text-[11px] text-muted-foreground line-clamp-1">
-                                {course.highlights.length} highlight{course.highlights.length === 1 ? "" : "s"}
-                              </p>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border/40">
+                              {course.icon ? (
+                                <img src={course.icon} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <BookOpen className="w-4 h-4 text-muted-foreground/40" />
+                              )}
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-foreground tracking-tight">{course.name}</span>
+                              {Array.isArray(course.approvals) && course.approvals.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {course.approvals.slice(0, 3).map((a, i) => (
+                                    <span key={i} className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
+                                      {a}
+                                    </span>
+                                  ))}
+                                  {course.approvals.length > 3 && (
+                                    <span className="text-[9px] text-muted-foreground italic">+{course.approvals.length - 3}</span>
+                                  )}
+                                </div>
+                              )}
+                              {Array.isArray(course.highlights) && course.highlights.length > 0 && (
+                                <p className="mt-1 text-[11px] text-muted-foreground line-clamp-1">
+                                  {course.highlights.length} highlight{course.highlights.length === 1 ? "" : "s"}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         )}
                       </td>
@@ -464,6 +578,25 @@ export default function CoursesPage() {
                             {course.degreeTypeId?.name || "Uncategorized"}
                           </span>
                         )}
+                      </td>
+
+                      {/* Duration/Fees */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-medium text-foreground tracking-tight">
+                            {course.duration || "N/A"}
+                          </span>
+                          <span className="text-[10px] font-bold text-primary/70 uppercase">
+                            {course.feeStarting ? `₹${course.feeStarting.toLocaleString()}+` : "No Fee Set"}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Universities */}
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-300 text-[10px] font-bold border border-blue-500/20">
+                          {Array.isArray(course.universities) ? course.universities.length : 0} Unis
+                        </span>
                       </td>
 
                       {/* Status */}
