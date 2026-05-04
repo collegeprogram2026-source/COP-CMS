@@ -17,18 +17,33 @@ export default function CoursesPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
+  const emptyCareerStats = {
+    salaryGrowth: [],
+    placementPercentage: 95,
+    highCTC: "",
+    avgCTC: "",
+    hiringPartners: "",
+  };
+
   const emptyForm = {
     name: "",
     slug: "",
     degreeTypeId: "",
     icon: "",
     description: "",
+    shortDescription: "",
     duration: "",
     feeStarting: "",
     universities: [],
     approvals: [],
     highlights: [],
+    eligibilityCriteria: [],
+    curriculum: [],
+    careerRoles: [],
+    careerStats: emptyCareerStats,
+    faqs: [],
     contentBlocks: [],
+    isTrending: false,
     isActive: true,
   };
 
@@ -40,7 +55,47 @@ export default function CoursesPage() {
     feeStarting: fd.feeStarting ? Number(fd.feeStarting) : null,
     universities: Array.isArray(fd.universities) ? fd.universities : [],
     approvals: (fd.approvals || []).map((s) => (s || "").trim()).filter(Boolean),
-    highlights: (fd.highlights || []).map((s) => (s || "").trim()).filter(Boolean),
+    highlights: (fd.highlights || [])
+      .map((h) => ({
+        title: (h?.title || "").trim(),
+        description: (h?.description || "").trim(),
+        icon: (h?.icon || "").trim(),
+      }))
+      .filter((h) => h.title || h.description || h.icon),
+    eligibilityCriteria: (fd.eligibilityCriteria || [])
+      .map((e) => ({
+        title: (e?.title || "").trim(),
+        points: (e?.points || []).map((p) => (p || "").trim()).filter(Boolean),
+      }))
+      .filter((e) => e.title || e.points.length > 0),
+    curriculum: (fd.curriculum || [])
+      .map((c) => ({
+        semester: (c?.semester || "").trim(),
+        subjects: (c?.subjects || []).map((s) => (s || "").trim()).filter(Boolean),
+      }))
+      .filter((c) => c.semester || c.subjects.length > 0),
+    careerRoles: (fd.careerRoles || []).map((s) => (s || "").trim()).filter(Boolean),
+    careerStats: {
+      salaryGrowth: (fd.careerStats?.salaryGrowth || [])
+        .map((s) => ({
+          year: (s?.year || "").trim(),
+          value: s?.value === "" || s?.value == null ? null : Number(s.value),
+        }))
+        .filter((s) => s.year || (s.value != null && !Number.isNaN(s.value))),
+      placementPercentage:
+        fd.careerStats?.placementPercentage === "" || fd.careerStats?.placementPercentage == null
+          ? 95
+          : Number(fd.careerStats.placementPercentage),
+      highCTC: (fd.careerStats?.highCTC || "").trim(),
+      avgCTC: (fd.careerStats?.avgCTC || "").trim(),
+      hiringPartners: (fd.careerStats?.hiringPartners || "").trim(),
+    },
+    faqs: (fd.faqs || [])
+      .map((f) => ({
+        question: (f?.question || "").trim(),
+        answer: (f?.answer || "").trim(),
+      }))
+      .filter((f) => f.question || f.answer),
     contentBlocks: Array.isArray(fd.contentBlocks) ? fd.contentBlocks : [],
   });
 
@@ -147,12 +202,51 @@ export default function CoursesPage() {
       degreeTypeId: course.degreeTypeId?._id || course.degreeTypeId,
       icon: course.icon || "",
       description: course.description || "",
+      shortDescription: course.shortDescription || "",
       duration: course.duration || "",
       feeStarting: course.feeStarting || "",
       universities: Array.isArray(course.universities) ? course.universities.map(u => u._id || u) : [],
       approvals: Array.isArray(course.approvals) ? course.approvals : [],
-      highlights: Array.isArray(course.highlights) ? course.highlights : [],
+      highlights: Array.isArray(course.highlights)
+        ? course.highlights.map((h) =>
+            typeof h === "string"
+              ? { title: h, description: "", icon: "" }
+              : { title: h?.title || "", description: h?.description || "", icon: h?.icon || "" }
+          )
+        : [],
+      eligibilityCriteria: Array.isArray(course.eligibilityCriteria)
+        ? course.eligibilityCriteria.map((e) => ({
+            title: e?.title || "",
+            points: Array.isArray(e?.points) ? e.points : [],
+          }))
+        : [],
+      curriculum: Array.isArray(course.curriculum)
+        ? course.curriculum.map((c) => ({
+            semester: c?.semester || "",
+            subjects: Array.isArray(c?.subjects) ? c.subjects : [],
+          }))
+        : [],
+      careerRoles: Array.isArray(course.careerRoles) ? course.careerRoles : [],
+      careerStats: {
+        salaryGrowth: Array.isArray(course.careerStats?.salaryGrowth)
+          ? course.careerStats.salaryGrowth.map((s) => ({
+              year: s?.year || "",
+              value: s?.value ?? "",
+            }))
+          : [],
+        placementPercentage: course.careerStats?.placementPercentage ?? 95,
+        highCTC: course.careerStats?.highCTC || "",
+        avgCTC: course.careerStats?.avgCTC || "",
+        hiringPartners: course.careerStats?.hiringPartners || "",
+      },
+      faqs: Array.isArray(course.faqs)
+        ? course.faqs.map((f) => ({
+            question: f?.question || "",
+            answer: f?.answer || "",
+          }))
+        : [],
       contentBlocks: Array.isArray(course.contentBlocks) ? course.contentBlocks : [],
+      isTrending: !!course.isTrending,
       isActive: course.isActive,
     });
     setShowForm(true);
@@ -360,11 +454,44 @@ export default function CoursesPage() {
                     <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Active Status</span>
                   </label>
                 </div>
+
+                <div className="flex flex-col justify-end space-y-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 opacity-0 select-none">Trending</label>
+                  <label className="flex items-center gap-3 cursor-pointer group bg-muted/20 dark:bg-zinc-800/30 px-4 py-[9px] rounded-xl border border-border/40 dark:border-zinc-800/40 w-full transition-colors hover:border-primary/30">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.isTrending}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isTrending: e.target.checked,
+                          })
+                        }
+                        className="peer sr-only"
+                      />
+                      <div className="w-10 h-5 bg-zinc-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary transition-colors"></div>
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-widest">Trending</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Short Description */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Short Description</label>
+                <input
+                  type="text"
+                  placeholder="One-liner shown in cards / listings"
+                  value={formData.shortDescription}
+                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                  className="w-full bg-muted/30 dark:bg-zinc-800/50 border border-border/50 dark:border-zinc-700/50 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-foreground text-sm font-medium"
+                />
               </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Short Description</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Full Description</label>
                 <textarea
                   placeholder="Provide a brief overview of the course..."
                   value={formData.description}
@@ -418,7 +545,586 @@ export default function CoursesPage() {
               </div>
 
               {/* Approvals */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Approvals</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, approvals: [...(prev.approvals || []), ""] }))
+                    }
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(formData.approvals || []).map((value, idx) => (
+                    <div key={idx} className="flex items-center gap-1 bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 rounded-lg pl-2 pr-1 py-1">
+                      <input
+                        type="text"
+                        placeholder="UGC, AICTE, ..."
+                        value={value}
+                        onChange={(e) => {
+                          const next = [...formData.approvals];
+                          next[idx] = e.target.value;
+                          setFormData({ ...formData, approvals: next });
+                        }}
+                        className="bg-transparent outline-none text-xs font-bold text-foreground w-32"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            approvals: formData.approvals.filter((_, i) => i !== idx),
+                          })
+                        }
+                        className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {(formData.approvals || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground/60 italic">No approvals added.</p>
+                  )}
+                </div>
+              </div>
 
+              {/* Program Highlights */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Program Highlights</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        highlights: [...(prev.highlights || []), { title: "", description: "", icon: "" }],
+                      }))
+                    }
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Highlight
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.highlights || []).map((h, idx) => (
+                    <div key={idx} className="p-3 rounded-lg bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 grid grid-cols-1 md:grid-cols-12 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Icon (Tabler name or URL)"
+                        value={h.icon || ""}
+                        onChange={(e) => {
+                          const next = [...formData.highlights];
+                          next[idx] = { ...next[idx], icon: e.target.value };
+                          setFormData({ ...formData, highlights: next });
+                        }}
+                        className="md:col-span-3 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={h.title || ""}
+                        onChange={(e) => {
+                          const next = [...formData.highlights];
+                          next[idx] = { ...next[idx], title: e.target.value };
+                          setFormData({ ...formData, highlights: next });
+                        }}
+                        className="md:col-span-3 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={h.description || ""}
+                        onChange={(e) => {
+                          const next = [...formData.highlights];
+                          next[idx] = { ...next[idx], description: e.target.value };
+                          setFormData({ ...formData, highlights: next });
+                        }}
+                        className="md:col-span-5 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                      />
+                      <div className="md:col-span-1 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              highlights: formData.highlights.filter((_, i) => i !== idx),
+                            })
+                          }
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                          title="Remove"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {(formData.highlights || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground/60 italic">No highlights added.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Eligibility Criteria */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Eligibility Criteria</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        eligibilityCriteria: [...(prev.eligibilityCriteria || []), { title: "", points: [] }],
+                      }))
+                    }
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Section
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.eligibilityCriteria || []).map((section, sIdx) => (
+                    <div key={sIdx} className="p-3 rounded-lg bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Section title (e.g. Academic Requirements)"
+                          value={section.title || ""}
+                          onChange={(e) => {
+                            const next = [...formData.eligibilityCriteria];
+                            next[sIdx] = { ...next[sIdx], title: e.target.value };
+                            setFormData({ ...formData, eligibilityCriteria: next });
+                          }}
+                          className="flex-1 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-bold text-foreground"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              eligibilityCriteria: formData.eligibilityCriteria.filter((_, i) => i !== sIdx),
+                            })
+                          }
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="pl-3 space-y-1.5">
+                        {(section.points || []).map((point, pIdx) => (
+                          <div key={pIdx} className="flex items-center gap-2">
+                            <span className="text-muted-foreground/50 text-xs">•</span>
+                            <input
+                              type="text"
+                              placeholder="Eligibility point"
+                              value={point}
+                              onChange={(e) => {
+                                const next = [...formData.eligibilityCriteria];
+                                const points = [...(next[sIdx].points || [])];
+                                points[pIdx] = e.target.value;
+                                next[sIdx] = { ...next[sIdx], points };
+                                setFormData({ ...formData, eligibilityCriteria: next });
+                              }}
+                              className="flex-1 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-1.5 rounded-md outline-none text-xs font-medium text-foreground"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = [...formData.eligibilityCriteria];
+                                next[sIdx] = {
+                                  ...next[sIdx],
+                                  points: next[sIdx].points.filter((_, i) => i !== pIdx),
+                                };
+                                setFormData({ ...formData, eligibilityCriteria: next });
+                              }}
+                              className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const next = [...formData.eligibilityCriteria];
+                            next[sIdx] = { ...next[sIdx], points: [...(next[sIdx].points || []), ""] };
+                            setFormData({ ...formData, eligibilityCriteria: next });
+                          }}
+                          className="h-6 px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary"
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Point
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {(formData.eligibilityCriteria || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground/60 italic">No eligibility sections added.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Curriculum */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Curriculum</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        curriculum: [...(prev.curriculum || []), { semester: "", subjects: [] }],
+                      }))
+                    }
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Semester
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.curriculum || []).map((sem, sIdx) => (
+                    <div key={sIdx} className="p-3 rounded-lg bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Semester (e.g. Semester 1)"
+                          value={sem.semester || ""}
+                          onChange={(e) => {
+                            const next = [...formData.curriculum];
+                            next[sIdx] = { ...next[sIdx], semester: e.target.value };
+                            setFormData({ ...formData, curriculum: next });
+                          }}
+                          className="flex-1 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-bold text-foreground"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              curriculum: formData.curriculum.filter((_, i) => i !== sIdx),
+                            })
+                          }
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="pl-3 flex flex-wrap gap-2">
+                        {(sem.subjects || []).map((subj, jIdx) => (
+                          <div key={jIdx} className="flex items-center gap-1 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 rounded-md pl-2 pr-1 py-1">
+                            <input
+                              type="text"
+                              placeholder="Subject"
+                              value={subj}
+                              onChange={(e) => {
+                                const next = [...formData.curriculum];
+                                const subjects = [...(next[sIdx].subjects || [])];
+                                subjects[jIdx] = e.target.value;
+                                next[sIdx] = { ...next[sIdx], subjects };
+                                setFormData({ ...formData, curriculum: next });
+                              }}
+                              className="bg-transparent outline-none text-xs font-medium text-foreground w-36"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = [...formData.curriculum];
+                                next[sIdx] = {
+                                  ...next[sIdx],
+                                  subjects: next[sIdx].subjects.filter((_, i) => i !== jIdx),
+                                };
+                                setFormData({ ...formData, curriculum: next });
+                              }}
+                              className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const next = [...formData.curriculum];
+                            next[sIdx] = { ...next[sIdx], subjects: [...(next[sIdx].subjects || []), ""] };
+                            setFormData({ ...formData, curriculum: next });
+                          }}
+                          className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary"
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Subject
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {(formData.curriculum || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground/60 italic">No semesters added.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Career Roles */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Potential Career Roles</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, careerRoles: [...(prev.careerRoles || []), ""] }))
+                    }
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Role
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(formData.careerRoles || []).map((value, idx) => (
+                    <div key={idx} className="flex items-center gap-1 bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 rounded-lg pl-2 pr-1 py-1">
+                      <input
+                        type="text"
+                        placeholder="e.g. Data Analyst"
+                        value={value}
+                        onChange={(e) => {
+                          const next = [...formData.careerRoles];
+                          next[idx] = e.target.value;
+                          setFormData({ ...formData, careerRoles: next });
+                        }}
+                        className="bg-transparent outline-none text-xs font-medium text-foreground w-40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            careerRoles: formData.careerRoles.filter((_, i) => i !== idx),
+                          })
+                        }
+                        className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {(formData.careerRoles || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground/60 italic">No roles added.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Career Stats */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-4">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Salary Growth & Placement</label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">Placement %</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.careerStats?.placementPercentage ?? ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          careerStats: { ...formData.careerStats, placementPercentage: e.target.value },
+                        })
+                      }
+                      className="w-full bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">High CTC</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. ₹24 LPA"
+                      value={formData.careerStats?.highCTC || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          careerStats: { ...formData.careerStats, highCTC: e.target.value },
+                        })
+                      }
+                      className="w-full bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">Avg CTC</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. ₹8 LPA"
+                      value={formData.careerStats?.avgCTC || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          careerStats: { ...formData.careerStats, avgCTC: e.target.value },
+                        })
+                      }
+                      className="w-full bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">Hiring Partners</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. 500+"
+                      value={formData.careerStats?.hiringPartners || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          careerStats: { ...formData.careerStats, hiringPartners: e.target.value },
+                        })
+                      }
+                      className="w-full bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider">Salary Growth Trajectory</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          careerStats: {
+                            ...prev.careerStats,
+                            salaryGrowth: [...(prev.careerStats?.salaryGrowth || []), { year: "", value: "" }],
+                          },
+                        }))
+                      }
+                      className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Add Year
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.careerStats?.salaryGrowth || []).map((entry, idx) => (
+                      <div key={idx} className="flex items-center gap-1 bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 rounded-lg p-1">
+                        <input
+                          type="text"
+                          placeholder="Year"
+                          value={entry.year || ""}
+                          onChange={(e) => {
+                            const next = [...(formData.careerStats?.salaryGrowth || [])];
+                            next[idx] = { ...next[idx], year: e.target.value };
+                            setFormData({
+                              ...formData,
+                              careerStats: { ...formData.careerStats, salaryGrowth: next },
+                            });
+                          }}
+                          className="bg-transparent outline-none text-xs font-bold text-foreground w-20 px-2"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Value"
+                          value={entry.value ?? ""}
+                          onChange={(e) => {
+                            const next = [...(formData.careerStats?.salaryGrowth || [])];
+                            next[idx] = { ...next[idx], value: e.target.value };
+                            setFormData({
+                              ...formData,
+                              careerStats: { ...formData.careerStats, salaryGrowth: next },
+                            });
+                          }}
+                          className="bg-transparent outline-none text-xs font-medium text-foreground w-24 px-2 border-l border-border/40 dark:border-zinc-700/40"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = (formData.careerStats?.salaryGrowth || []).filter((_, i) => i !== idx);
+                            setFormData({
+                              ...formData,
+                              careerStats: { ...formData.careerStats, salaryGrowth: next },
+                            });
+                          }}
+                          className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {(formData.careerStats?.salaryGrowth || []).length === 0 && (
+                      <p className="text-xs text-muted-foreground/60 italic">No data points added.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* FAQs */}
+              <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Frequently Asked Questions</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        faqs: [...(prev.faqs || []), { question: "", answer: "" }],
+                      }))
+                    }
+                    className="h-7 px-3 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add FAQ
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.faqs || []).map((faq, idx) => (
+                    <div key={idx} className="p-3 rounded-lg bg-card dark:bg-zinc-900/60 border border-border/50 dark:border-zinc-700/50 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Question"
+                          value={faq.question || ""}
+                          onChange={(e) => {
+                            const next = [...formData.faqs];
+                            next[idx] = { ...next[idx], question: e.target.value };
+                            setFormData({ ...formData, faqs: next });
+                          }}
+                          className="flex-1 bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-bold text-foreground"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              faqs: formData.faqs.filter((_, i) => i !== idx),
+                            })
+                          }
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <textarea
+                        placeholder="Answer"
+                        rows={2}
+                        value={faq.answer || ""}
+                        onChange={(e) => {
+                          const next = [...formData.faqs];
+                          next[idx] = { ...next[idx], answer: e.target.value };
+                          setFormData({ ...formData, faqs: next });
+                        }}
+                        className="w-full bg-muted/30 dark:bg-zinc-800/50 border border-border/40 dark:border-zinc-700/40 px-3 py-2 rounded-lg outline-none text-xs font-medium text-foreground resize-none"
+                      />
+                    </div>
+                  ))}
+                  {(formData.faqs || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground/60 italic">No FAQs added.</p>
+                  )}
+                </div>
+              </div>
 
               {/* Detailed Page — Block Editor */}
               <div className="p-5 rounded-xl border border-border/50 dark:border-zinc-800/60 bg-muted/20 dark:bg-zinc-800/20">

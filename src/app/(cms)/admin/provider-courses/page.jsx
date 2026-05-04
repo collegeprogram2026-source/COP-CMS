@@ -31,6 +31,9 @@ export default function ProviderCoursesPage() {
     discountedFees: "",
     feesBreakdown: [],
     duration: "",
+    mode: "",
+    intakeMonths: "",
+    language: "English",
     eligibility: "",
     seatsAvailable: "",
     brochureUrl: "",
@@ -42,6 +45,13 @@ export default function ProviderCoursesPage() {
     approvals: [],
     highlights: [],
     contentBlocks: [],
+    learningOutcomes: [],
+    whoShouldEnroll: [],
+    programStructure: [],
+    careerOutcomes: { topRoles: [], averagePackage: "", topRecruiters: [] },
+    placementSupport: [],
+    keyDates: [],
+    faqs: [],
     isActive: true,
     bestROI: false,
     trending: false,
@@ -72,11 +82,16 @@ export default function ProviderCoursesPage() {
   const emptyForm = {
     degreeTypeId: "", courseId: "", specializationId: "", providerId: "",
     title: "", slug: "", shortDescription: "", minFees: "", fees: "", discountedFees: "", feesBreakdown: [],
-    duration: "", eligibility: "", seatsAvailable: "", brochureUrl: "", thumbnail: "",
+    duration: "", mode: "", intakeMonths: "", language: "English",
+    eligibility: "", seatsAvailable: "", brochureUrl: "", thumbnail: "",
     weeklyEffort: "", examPattern: "", employerAcceptance: "Medium",
     difficultyLevel: "Intermediate", approvals: [], highlights: [],
     contentBlocks: [],
+    learningOutcomes: [], whoShouldEnroll: [], programStructure: [],
+    careerOutcomes: { topRoles: [], averagePackage: "", topRecruiters: [] },
+    placementSupport: [], keyDates: [], faqs: [],
     isActive: true, bestROI: false, trending: false,
+    isEmiAvailable: false, emiStartingAmount: "", emiTerms: "",
   };
 
   const buildPayload = (fd) => ({
@@ -93,6 +108,29 @@ export default function ProviderCoursesPage() {
     isEmiAvailable: !!fd.isEmiAvailable,
     emiStartingAmount: fd.emiStartingAmount || "",
     emiTerms: fd.emiTerms || "",
+    intakeMonths: fd.intakeMonths || "",
+    language: fd.language || "English",
+    mode: fd.mode || "",
+    learningOutcomes: (fd.learningOutcomes || []).map((s) => (s || "").trim()).filter(Boolean),
+    whoShouldEnroll: (fd.whoShouldEnroll || []).map((s) => (s || "").trim()).filter(Boolean),
+    placementSupport: (fd.placementSupport || []).map((s) => (s || "").trim()).filter(Boolean),
+    programStructure: (fd.programStructure || [])
+      .map((m) => ({
+        title: (m.title || "").trim(),
+        topics: (m.topics || []).map((t) => (t || "").trim()).filter(Boolean),
+      }))
+      .filter((m) => m.title || m.topics.length),
+    careerOutcomes: {
+      topRoles: ((fd.careerOutcomes?.topRoles) || []).map((s) => (s || "").trim()).filter(Boolean),
+      averagePackage: fd.careerOutcomes?.averagePackage || "",
+      topRecruiters: ((fd.careerOutcomes?.topRecruiters) || []).map((s) => (s || "").trim()).filter(Boolean),
+    },
+    keyDates: (fd.keyDates || [])
+      .map((k) => ({ event: (k.event || "").trim(), date: (k.date || "").trim() }))
+      .filter((k) => k.event || k.date),
+    faqs: (fd.faqs || [])
+      .map((f) => ({ question: (f.question || "").trim(), answer: (f.answer || "").trim() }))
+      .filter((f) => f.question || f.answer),
   });
 
   const handleCreate = async (e) => {
@@ -127,10 +165,13 @@ export default function ProviderCoursesPage() {
       approvals: Array.isArray(item.approvals) ? item.approvals : [],
       highlights: Array.isArray(item.highlights) ? item.highlights : [],
       contentBlocks: Array.isArray(item.contentBlocks) ? item.contentBlocks : [],
-      title: item.title, slug: item.slug, shortDescription: item.shortDescription || "", 
+      title: item.title, slug: item.slug, shortDescription: item.shortDescription || "",
       minFees: item.minFees || "",
       fees: item.fees,
       discountedFees: item.discountedFees, duration: item.duration,
+      mode: item.mode || "",
+      intakeMonths: item.intakeMonths || "",
+      language: item.language || "English",
       eligibility: item.eligibility, seatsAvailable: item.seatsAvailable,
       brochureUrl: item.brochureUrl, thumbnail: item.thumbnail || "", isActive: item.isActive,
       bestROI: item.bestROI || false,
@@ -138,6 +179,23 @@ export default function ProviderCoursesPage() {
       isEmiAvailable: item.isEmiAvailable || false,
       emiStartingAmount: item.emiStartingAmount || "",
       emiTerms: item.emiTerms || "",
+      learningOutcomes: Array.isArray(item.learningOutcomes) ? item.learningOutcomes : [],
+      whoShouldEnroll: Array.isArray(item.whoShouldEnroll) ? item.whoShouldEnroll : [],
+      programStructure: Array.isArray(item.programStructure)
+        ? item.programStructure.map((m) => ({ title: m.title || "", topics: Array.isArray(m.topics) ? m.topics : [] }))
+        : [],
+      careerOutcomes: {
+        topRoles: Array.isArray(item.careerOutcomes?.topRoles) ? item.careerOutcomes.topRoles : [],
+        averagePackage: item.careerOutcomes?.averagePackage || "",
+        topRecruiters: Array.isArray(item.careerOutcomes?.topRecruiters) ? item.careerOutcomes.topRecruiters : [],
+      },
+      placementSupport: Array.isArray(item.placementSupport) ? item.placementSupport : [],
+      keyDates: Array.isArray(item.keyDates)
+        ? item.keyDates.map((k) => ({ event: k.event || "", date: k.date || "" }))
+        : [],
+      faqs: Array.isArray(item.faqs)
+        ? item.faqs.map((f) => ({ question: f.question || "", answer: f.answer || "" }))
+        : [],
     });
     setShowForm(false);
   };
@@ -539,6 +597,305 @@ export default function ProviderCoursesPage() {
                 </div>
                 {(!formData.highlights || formData.highlights.length === 0) && (
                   <p className="text-center py-3 text-xs text-zinc-400 dark:text-zinc-500 italic">No highlights added</p>
+                )}
+              </div>
+
+              {/* Logistics Extras: Mode / Intake / Language */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Mode</label>
+                <input type="text" placeholder="e.g. Online" value={formData.mode} onChange={(e) => setFormData({ ...formData, mode: e.target.value })} className={inputCls} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Intake Months</label>
+                <input type="text" placeholder="e.g. Jan / Jul" value={formData.intakeMonths} onChange={(e) => setFormData({ ...formData, intakeMonths: e.target.value })} className={inputCls} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Language</label>
+                <input type="text" placeholder="e.g. English" value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className={inputCls} />
+              </div>
+
+              {/* Learning Outcomes (Short Points) */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Learning Outcomes</label>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => setFormData({ ...formData, learningOutcomes: [...(formData.learningOutcomes || []), ""] })}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add Outcome
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {(formData.learningOutcomes || []).map((val, idx) => (
+                    <div key={idx} className="flex gap-2 items-center p-2 rounded-lg border border-zinc-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-800/80 shadow-sm">
+                      <span className="text-xs font-bold text-zinc-400 w-5 text-center">{idx + 1}.</span>
+                      <input type="text" placeholder="What learners will gain"
+                        value={val}
+                        onChange={(e) => { const arr = [...formData.learningOutcomes]; arr[idx] = e.target.value; setFormData({ ...formData, learningOutcomes: arr }); }}
+                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400" />
+                      <Button type="button" variant="ghost" size="icon"
+                        onClick={() => setFormData({ ...formData, learningOutcomes: formData.learningOutcomes.filter((_, i) => i !== idx) })}
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {(!formData.learningOutcomes || formData.learningOutcomes.length === 0) && (
+                  <p className="text-center py-3 text-xs text-zinc-400 italic">No outcomes added</p>
+                )}
+              </div>
+
+              {/* Who Should Enroll */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Who Should Enroll</label>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => setFormData({ ...formData, whoShouldEnroll: [...(formData.whoShouldEnroll || []), ""] })}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add Audience
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {(formData.whoShouldEnroll || []).map((val, idx) => (
+                    <div key={idx} className="flex gap-2 items-center p-2 rounded-lg border border-zinc-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-800/80 shadow-sm">
+                      <span className="text-xs font-bold text-zinc-400 w-5 text-center">{idx + 1}.</span>
+                      <input type="text" placeholder="Target audience profile"
+                        value={val}
+                        onChange={(e) => { const arr = [...formData.whoShouldEnroll]; arr[idx] = e.target.value; setFormData({ ...formData, whoShouldEnroll: arr }); }}
+                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400" />
+                      <Button type="button" variant="ghost" size="icon"
+                        onClick={() => setFormData({ ...formData, whoShouldEnroll: formData.whoShouldEnroll.filter((_, i) => i !== idx) })}
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {(!formData.whoShouldEnroll || formData.whoShouldEnroll.length === 0) && (
+                  <p className="text-center py-3 text-xs text-zinc-400 italic">No audience profiles added</p>
+                )}
+              </div>
+
+              {/* Program Structure (Modules / Semesters) */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Program Structure (Modules / Semesters)</label>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => setFormData({ ...formData, programStructure: [...(formData.programStructure || []), { title: "", topics: [] }] })}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add Module
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.programStructure || []).map((mod, mIdx) => (
+                    <div key={mIdx} className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-800/80 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <span className="text-xs font-bold text-zinc-400 w-12">M {mIdx + 1}</span>
+                        <input type="text" placeholder="Module / Semester title (e.g. Year 1 — Foundations)"
+                          value={mod.title}
+                          onChange={(e) => { const arr = [...formData.programStructure]; arr[mIdx] = { ...arr[mIdx], title: e.target.value }; setFormData({ ...formData, programStructure: arr }); }}
+                          className={inputCls + " text-sm"} />
+                        <Button type="button" variant="ghost" size="icon"
+                          onClick={() => setFormData({ ...formData, programStructure: formData.programStructure.filter((_, i) => i !== mIdx) })}
+                          className="p-1 text-zinc-400 hover:text-red-500 transition-colors flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        </Button>
+                      </div>
+                      <div className="pl-14 space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Topics</span>
+                          <button type="button"
+                            onClick={() => { const arr = [...formData.programStructure]; const topics = [...(arr[mIdx].topics || []), ""]; arr[mIdx] = { ...arr[mIdx], topics }; setFormData({ ...formData, programStructure: arr }); }}
+                            className="text-[10px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline">+ Add Topic</button>
+                        </div>
+                        {(mod.topics || []).map((t, tIdx) => (
+                          <div key={tIdx} className="flex gap-1 items-center">
+                            <input type="text" placeholder="Topic / Subject"
+                              value={t}
+                              onChange={(e) => { const arr = [...formData.programStructure]; const topics = [...(arr[mIdx].topics || [])]; topics[tIdx] = e.target.value; arr[mIdx] = { ...arr[mIdx], topics }; setFormData({ ...formData, programStructure: arr }); }}
+                              className={inputCls + " text-xs"} />
+                            <button type="button"
+                              onClick={() => { const arr = [...formData.programStructure]; const topics = (arr[mIdx].topics || []).filter((_, i) => i !== tIdx); arr[mIdx] = { ...arr[mIdx], topics }; setFormData({ ...formData, programStructure: arr }); }}
+                              className="text-zinc-400 hover:text-red-500 flex-shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {(!formData.programStructure || formData.programStructure.length === 0) && (
+                  <p className="text-center py-3 text-xs text-zinc-400 italic">No modules added</p>
+                )}
+              </div>
+
+              {/* Career Outcomes */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Career Outcomes</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Top Roles */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Top Roles</span>
+                      <button type="button"
+                        onClick={() => setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, topRoles: [...(formData.careerOutcomes?.topRoles || []), ""] } })}
+                        className="text-[10px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline">+ Add</button>
+                    </div>
+                    {(formData.careerOutcomes?.topRoles || []).map((val, idx) => (
+                      <div key={idx} className="flex gap-1 items-center">
+                        <input type="text" placeholder="e.g. Product Manager"
+                          value={val}
+                          onChange={(e) => { const arr = [...(formData.careerOutcomes?.topRoles || [])]; arr[idx] = e.target.value; setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, topRoles: arr } }); }}
+                          className={inputCls + " text-xs"} />
+                        <button type="button"
+                          onClick={() => setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, topRoles: (formData.careerOutcomes?.topRoles || []).filter((_, i) => i !== idx) } })}
+                          className="text-zinc-400 hover:text-red-500 flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Average Package */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Average Package</span>
+                    <input type="text" placeholder="e.g. ₹14 LPA"
+                      value={formData.careerOutcomes?.averagePackage || ""}
+                      onChange={(e) => setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, averagePackage: e.target.value } })}
+                      className={inputCls + " text-sm"} />
+                  </div>
+                  {/* Top Recruiters */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Top Recruiters</span>
+                      <button type="button"
+                        onClick={() => setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, topRecruiters: [...(formData.careerOutcomes?.topRecruiters || []), ""] } })}
+                        className="text-[10px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline">+ Add</button>
+                    </div>
+                    {(formData.careerOutcomes?.topRecruiters || []).map((val, idx) => (
+                      <div key={idx} className="flex gap-1 items-center">
+                        <input type="text" placeholder="e.g. Microsoft"
+                          value={val}
+                          onChange={(e) => { const arr = [...(formData.careerOutcomes?.topRecruiters || [])]; arr[idx] = e.target.value; setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, topRecruiters: arr } }); }}
+                          className={inputCls + " text-xs"} />
+                        <button type="button"
+                          onClick={() => setFormData({ ...formData, careerOutcomes: { ...formData.careerOutcomes, topRecruiters: (formData.careerOutcomes?.topRecruiters || []).filter((_, i) => i !== idx) } })}
+                          className="text-zinc-400 hover:text-red-500 flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Placement Support */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Placement Support</label>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => setFormData({ ...formData, placementSupport: [...(formData.placementSupport || []), ""] })}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add Service
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {(formData.placementSupport || []).map((val, idx) => (
+                    <div key={idx} className="flex gap-2 items-center p-2 rounded-lg border border-zinc-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-800/80 shadow-sm">
+                      <span className="text-xs font-bold text-zinc-400 w-5 text-center">{idx + 1}.</span>
+                      <input type="text" placeholder="e.g. 1:1 career coaching"
+                        value={val}
+                        onChange={(e) => { const arr = [...formData.placementSupport]; arr[idx] = e.target.value; setFormData({ ...formData, placementSupport: arr }); }}
+                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400" />
+                      <Button type="button" variant="ghost" size="icon"
+                        onClick={() => setFormData({ ...formData, placementSupport: formData.placementSupport.filter((_, i) => i !== idx) })}
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {(!formData.placementSupport || formData.placementSupport.length === 0) && (
+                  <p className="text-center py-3 text-xs text-zinc-400 italic">No placement services added</p>
+                )}
+              </div>
+
+              {/* Key Dates */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Key Dates</label>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => setFormData({ ...formData, keyDates: [...(formData.keyDates || []), { event: "", date: "" }] })}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add Date
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {(formData.keyDates || []).map((kd, idx) => (
+                    <div key={idx} className="flex gap-2 items-center p-2 rounded-lg border border-zinc-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-800/80 shadow-sm">
+                      <input type="text" placeholder="Event (e.g. Application Deadline)"
+                        value={kd.event}
+                        onChange={(e) => { const arr = [...formData.keyDates]; arr[idx] = { ...arr[idx], event: e.target.value }; setFormData({ ...formData, keyDates: arr }); }}
+                        className="border-none focus:ring-0 px-2 py-1 text-sm flex-1 outline-none bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400" />
+                      <input type="text" placeholder="Date (e.g. 15 Jan 2026)"
+                        value={kd.date}
+                        onChange={(e) => { const arr = [...formData.keyDates]; arr[idx] = { ...arr[idx], date: e.target.value }; setFormData({ ...formData, keyDates: arr }); }}
+                        className="border-none focus:ring-0 px-2 py-1 text-sm w-44 outline-none bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400" />
+                      <Button type="button" variant="ghost" size="icon"
+                        onClick={() => setFormData({ ...formData, keyDates: formData.keyDates.filter((_, i) => i !== idx) })}
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {(!formData.keyDates || formData.keyDates.length === 0) && (
+                  <p className="text-center py-3 text-xs text-zinc-400 italic">No dates added</p>
+                )}
+              </div>
+
+              {/* FAQs */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-5 rounded-xl border border-zinc-100 dark:border-zinc-700/40 bg-zinc-50 dark:bg-zinc-800/40 space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">FAQs</label>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => setFormData({ ...formData, faqs: [...(formData.faqs || []), { question: "", answer: "" }] })}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7v14" /></svg>
+                    Add FAQ
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {(formData.faqs || []).map((faq, idx) => (
+                    <div key={idx} className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-800/80 space-y-2">
+                      <div className="flex gap-2 items-start">
+                        <span className="text-xs font-bold text-zinc-400 w-12 pt-2">Q {idx + 1}</span>
+                        <input type="text" placeholder="Question"
+                          value={faq.question}
+                          onChange={(e) => { const arr = [...formData.faqs]; arr[idx] = { ...arr[idx], question: e.target.value }; setFormData({ ...formData, faqs: arr }); }}
+                          className={inputCls + " text-sm"} />
+                        <Button type="button" variant="ghost" size="icon"
+                          onClick={() => setFormData({ ...formData, faqs: formData.faqs.filter((_, i) => i !== idx) })}
+                          className="p-1 text-zinc-400 hover:text-red-500 transition-colors flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        </Button>
+                      </div>
+                      <div className="pl-14">
+                        <textarea placeholder="Answer"
+                          value={faq.answer}
+                          onChange={(e) => { const arr = [...formData.faqs]; arr[idx] = { ...arr[idx], answer: e.target.value }; setFormData({ ...formData, faqs: arr }); }}
+                          className={inputCls + " min-h-[60px] text-sm"} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {(!formData.faqs || formData.faqs.length === 0) && (
+                  <p className="text-center py-3 text-xs text-zinc-400 italic">No FAQs added</p>
                 )}
               </div>
 
