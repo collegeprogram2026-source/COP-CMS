@@ -93,6 +93,13 @@ const EMPTY_FORM = {
   metaDescription: "",
   metaKeywords: "",
   canonicalUrl: "",
+  ogTitle: "",
+  ogDescription: "",
+  ogImage: "",
+  twitterTitle: "",
+  twitterDescription: "",
+  twitterImage: "",
+  noindex: false,
 };
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
@@ -796,8 +803,61 @@ function ProviderForm({ form, setForm, onSubmit, loading, submitLabel, onCancel 
               <textarea placeholder="Snippet shown in search results..." value={form.metaDescription} onChange={(e) => setForm({ ...form, metaDescription: e.target.value })} className={ta} rows={2} />
             </Field>
 
-            <Field label="Canonical URL" span={12} hint="Avoid duplicate content issues">
-              <input type="text" placeholder="https://yourdomain.com/providers/..." value={form.canonicalUrl} onChange={(e) => setForm({ ...form, canonicalUrl: e.target.value })} className={inp} />
+            <Field label="Canonical URL" span={12} hint="Leave blank to auto-generate from slug">
+              <input type="text" placeholder="https://yourdomain.com/universities/..." value={form.canonicalUrl} onChange={(e) => setForm({ ...form, canonicalUrl: e.target.value })} className={inp} />
+            </Field>
+
+            {/* ── Open Graph (Facebook/LinkedIn) ── */}
+            <div className="col-span-12 pt-4 border-t border-border/40 dark:border-zinc-800/60">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 mb-3">Open Graph (Facebook / LinkedIn)</h4>
+              <p className="text-xs text-muted-foreground/60 mb-4">Leave blank to fall back to Meta Title / Description / Cover Image.</p>
+            </div>
+
+            <Field label="OG Title" span={6} hint="Override for social shares">
+              <input type="text" placeholder="Defaults to Meta Title" value={form.ogTitle} onChange={(e) => setForm({ ...form, ogTitle: e.target.value })} className={inp} />
+            </Field>
+
+            <Field label="OG Description" span={6} hint="Override for social shares">
+              <input type="text" placeholder="Defaults to Meta Description" value={form.ogDescription} onChange={(e) => setForm({ ...form, ogDescription: e.target.value })} className={inp} />
+            </Field>
+
+            <Field label="OG Image" span={12} hint="1200×630 recommended">
+              <ImageUploader value={form.ogImage} onChange={(url) => setForm({ ...form, ogImage: url })} folder="cop/providers/og" />
+            </Field>
+
+            {/* ── Twitter / X ── */}
+            <div className="col-span-12 pt-4 border-t border-border/40 dark:border-zinc-800/60">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 mb-3">Twitter / X</h4>
+              <p className="text-xs text-muted-foreground/60 mb-4">Leave blank to fall back to OG values.</p>
+            </div>
+
+            <Field label="Twitter Title" span={6}>
+              <input type="text" placeholder="Defaults to OG Title" value={form.twitterTitle} onChange={(e) => setForm({ ...form, twitterTitle: e.target.value })} className={inp} />
+            </Field>
+
+            <Field label="Twitter Description" span={6}>
+              <input type="text" placeholder="Defaults to OG Description" value={form.twitterDescription} onChange={(e) => setForm({ ...form, twitterDescription: e.target.value })} className={inp} />
+            </Field>
+
+            <Field label="Twitter Image" span={12} hint="Defaults to OG Image">
+              <ImageUploader value={form.twitterImage} onChange={(url) => setForm({ ...form, twitterImage: url })} folder="cop/providers/twitter" />
+            </Field>
+
+            {/* ── Indexing ── */}
+            <div className="col-span-12 pt-4 border-t border-border/40 dark:border-zinc-800/60">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 mb-3">Indexing</h4>
+            </div>
+
+            <Field label="Hide from search engines" span={12} hint="Adds robots noindex,nofollow. Use for unfinished or private pages.">
+              <label className="inline-flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!form.noindex}
+                  onChange={(e) => setForm({ ...form, noindex: e.target.checked })}
+                  className="w-4 h-4 rounded border-border/60 text-primary focus:ring-primary/70"
+                />
+                <span className="text-sm text-foreground">No-index this provider page</span>
+              </label>
             </Field>
           </div>
         </FormSection>

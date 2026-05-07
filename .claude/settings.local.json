@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\PROJECTS\\\\Supercx\\\\COP1\\\\cop-frontend\" -Force)",
+      "Bash(Select-Object Name, FullName)"
     ]
   }
 }
